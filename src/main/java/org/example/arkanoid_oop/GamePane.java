@@ -10,7 +10,6 @@ public class GamePane extends Pane {
 
     private double screenWidth;
     private double screenHeight;
-
     private Background background;
 
     // Vòng lặp game
