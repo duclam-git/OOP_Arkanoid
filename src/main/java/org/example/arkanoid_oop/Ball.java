@@ -36,6 +36,14 @@ public class Ball extends ImageView {
         // Đặt vị trí ban đầu
         reset();
 
+        // Tạo một đối tượng animation xoay
+        RotateTransition rt = new RotateTransition(Duration.seconds(2), this);
+        rt.setByAngle(360); // Xoay 360 độ
+        rt.setCycleCount(RotateTransition.INDEFINITE); // Lặp lại vô hạn
+        rt.setInterpolator(Interpolator.LINEAR); // Xoay đều, không nhanh chậm
+
+        // Bắt đầu animation
+        rt.play();
     }
 
     /**
