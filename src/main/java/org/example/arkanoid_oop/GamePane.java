@@ -10,7 +10,14 @@ public class GamePane extends Pane {
 
     private double screenWidth;
     private double screenHeight;
+
+    // --- Các đối tượng game ---
     private Background background;
+    private Paddle paddle; // (MỚI) Thêm đối tượng Paddle
+
+    // --- Trạng thái game ---
+    private boolean goLeft = false;   // (MỚI) Cờ di chuyển trái
+    private boolean goRight = false;  // (MỚI) Cờ di chuyển phải
 
     // Vòng lặp game
     private AnimationTimer gameLoop;
@@ -21,11 +28,15 @@ public class GamePane extends Pane {
 
         setPrefSize(screenWidth, screenHeight);
 
-        // Khởi tạo đối tượng Background
+        // --- 1. Tạo Nền ---
         background = new Background(screenWidth, screenHeight);
-        getChildren().add(background);
+        getChildren().add(background); // Thêm Nền (ở lớp dưới cùng)
 
-        // Khởi tạo Vòng lặp Game
+        // --- 2. Tạo Ván trượt (MỚI) ---
+        paddle = new Paddle(screenWidth, screenHeight);
+        getChildren().add(paddle); // Thêm Ván trượt (ở lớp trên)
+
+        // --- 3. Khởi tạo Vòng lặp Game ---
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -40,17 +51,29 @@ public class GamePane extends Pane {
      * để cập nhật toàn bộ logic game.
      */
     private void updateGame() {
+        // (MỚI) Yêu cầu ván trượt tự cập nhật vị trí
+        paddle.update(goLeft, goRight);
     }
 
     /**
-     * Xử lý khi phím được nhấn
+     * (MỚI) Xử lý khi phím được nhấn
      */
     public void handleKeyPressed(KeyCode code) {
+        if (code == KeyCode.A || code == KeyCode.LEFT) {
+            goLeft = true;
+        } else if (code == KeyCode.D || code == KeyCode.RIGHT) {
+            goRight = true;
+        }
     }
 
     /**
-     * Xử lý khi phím được thả ra
+     * (MỚI) Xử lý khi phím được thả ra
      */
     public void handleKeyReleased(KeyCode code) {
+        if (code == KeyCode.A || code == KeyCode.LEFT) {
+            goLeft = false;
+        } else if (code == KeyCode.D || code == KeyCode.RIGHT) {
+            goRight = false;
+        }
     }
 }
