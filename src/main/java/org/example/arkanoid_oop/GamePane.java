@@ -206,7 +206,7 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- Va chạm Bóng với Gạch ---
+        // Va chạm Bóng với Gạch
         // (MỚI) Tạo danh sách tạm thời để xử lý gạch nổ
         List<Brick> bricksToExplode = new ArrayList<>();
 
