@@ -222,7 +222,6 @@ public class GamePane extends Pane {
 
                 if (wasDestroyed) {
                     // (SỬA LỖI) Xử lý logic PHIÊN BẢN GẠCH BỊ PHÁ HỦY
-                    // Phải làm điều này NGAY LẬP TỨC
 
                     // 1. Xóa gạch bị bóng đập
                     brickIt.remove();
