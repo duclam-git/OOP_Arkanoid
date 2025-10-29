@@ -10,9 +10,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import org.example.arkanoid.model.Ball;
 import org.example.arkanoid.model.Paddle;
-import java.util.List;
-import java.util.ArrayList;
 import org.example.arkanoid.model.Brick;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +22,6 @@ public class GameScene {
     private final List<Brick> bricks = new ArrayList<>();
     private final Label scoreLabel = new Label();
     private int score = 0;
-
     private boolean leftPressed = false;
     private boolean rightPressed = false;
 
@@ -39,13 +37,11 @@ public class GameScene {
         root.getChildren().add(bgView);
 
         // Paddle
-        paddle = new Paddle(width / 2 - 50, height - 60,
-                "/org/example/arkanoid/image/paddle.png",120,20);
+        paddle = new Paddle(width / 2 - 50, height - 60, "/org/example/arkanoid/image/paddle.png", 120, 20);
         root.getChildren().add(paddle.getNode());
 
         // Ball
-        ball = new Ball(width / 2 - 10, height - 80,
-                "/org/example/arkanoid/image/ball.png",20,20);
+        ball = new Ball(width / 2 - 10, height - 80, "/org/example/arkanoid/image/ball.png", 20, 20);
         root.getChildren().add(ball.getNode());
 
         // Bricks
@@ -57,13 +53,21 @@ public class GameScene {
         double startY = 50;
         double gap = 5;
 
+        String[] brickImages = {
+                "/org/example/arkanoid/image/brick1.png",
+                "/org/example/arkanoid/image/brick2.png",
+                "/org/example/arkanoid/image/brick3.png"
+        };
+
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
+                String imagePath = brickImages[(row + col) % brickImages.length];
                 Brick brick = new Brick(
                         startX + col * (brickWidth + gap),
                         startY + row * (brickHeight + gap),
-                        "/org/example/arkanoid/image/brick.png",
-                        brickWidth, brickHeight
+                        imagePath,
+                        brickWidth,
+                        brickHeight
                 );
                 bricks.add(brick);
                 root.getChildren().add(brick.getNode());
@@ -105,21 +109,21 @@ public class GameScene {
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                // Paddle di chuyển
+                // Paddle movement
                 if (leftPressed) paddle.moveLeft();
                 if (rightPressed) paddle.moveRight();
 
-                // Ball cập nhật
+                // Ball update
                 ball.updatePosition(scene.getWidth(), scene.getHeight(), paddle, bricks);
 
-                // Cập nhật điểm
+                // Update score (count destroyed bricks)
                 score = (int) bricks.stream().filter(Brick::isDestroyed).count();
                 scoreLabel.setText("Score: " + score);
             }
         };
         timer.start();
 
-        // Đặt focus để nhận input
+        // Focus for input
         scene.getRoot().requestFocus();
     }
 }
