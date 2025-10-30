@@ -1,5 +1,9 @@
+package org.example.arkanoid_oop.Brick;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import org.example.arkanoid_oop.PowerupType;
+
 import java.util.Random;
 
 public class Powerup_brick extends Brick {

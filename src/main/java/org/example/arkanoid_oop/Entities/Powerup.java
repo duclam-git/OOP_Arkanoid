@@ -1,5 +1,8 @@
+package org.example.arkanoid_oop.Entities;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import org.example.arkanoid_oop.PowerupType;
 
 /**
  * Lớp Powerup đại diện cho vật phẩm rơi xuống

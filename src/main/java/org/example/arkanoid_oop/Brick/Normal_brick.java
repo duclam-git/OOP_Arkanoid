@@ -1,3 +1,5 @@
+package org.example.arkanoid_oop.Brick;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 

@@ -1,3 +1,5 @@
+package org.example.arkanoid_oop;
+
 import javafx.animation.AnimationTimer;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
@@ -8,6 +10,8 @@ import javafx.scene.text.Text;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Circle;
+import org.example.arkanoid_oop.Brick.*;
+import org.example.arkanoid_oop.Entities.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
