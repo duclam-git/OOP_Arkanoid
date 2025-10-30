@@ -1,46 +1,61 @@
+package org.example.arkanoid_oop.Brick;
+
 import javafx.scene.image.ImageView;
 
-/**
- * Lớp cha trừu tượng cho tất cả các loại gạch.
- * Quản lý các thuộc tính chung.
- */
 public abstract class Brick {
+    public static final int BRICK_WIDTH = 20;
+    public static final int BRICK_HEIGHT = 20;
 
-    // Kích thước chuẩn cho mỗi viên gạch
-    public static final double BRICK_WIDTH = 75;
-    public static final double BRICK_HEIGHT = 30;
+    protected double x;
+    protected double y;
+    protected ImageView view;
+    protected int scoreValue;
+    protected boolean destroyed = false;
 
-    protected ImageView view; // Mỗi gạch sẽ có một ImageView để hiển thị
-    protected int scoreValue = 10;
-    private boolean destroyed = false; // Cờ báo gạch đã bị phá hủy hoàn toàn
-
-    public Brick(double x, double y) {
-        // Hàm khởi tạo này sẽ được các lớp con gọi
+    public double getX() {
+        return x;
     }
 
-    /**
-     * Phương thức trừu tượng.
-     * Xử lý logic khi bóng va chạm vào gạch.
-     * Trả về true nếu gạch bị PHÁ HỦY HOÀN TOÀN (để GamePane xóa nó).
-     * Trả về false nếu gạch chỉ bị hỏng (như Hard_brick).
-     */
-    public abstract boolean onHit();
+    public void setX(double x) {
+        this.x = x;
+    }
 
-    // Các hàm Getter chung
+    public double getY() {
+        return y;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
 
     public ImageView getView() {
         return view;
+    }
+
+    public void setView(ImageView view) {
+        this.view = view;
     }
 
     public int getScoreValue() {
         return scoreValue;
     }
 
+    public void setScoreValue(int scoreValue) {
+        this.scoreValue = scoreValue;
+    }
+
     public boolean isDestroyed() {
         return destroyed;
     }
 
-    protected void setDestroyed(boolean destroyed) {
+    public void setDestroyed(boolean destroyed) {
         this.destroyed = destroyed;
     }
+
+    public Brick(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public abstract boolean onHit();
 }
