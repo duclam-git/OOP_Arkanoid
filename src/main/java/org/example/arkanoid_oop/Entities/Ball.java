@@ -100,4 +100,8 @@ public class Ball extends ImageView {
     public double getDy() {
         return dy;
     }
+
+    public double getDx() {
+        return dx;
+    }
 }

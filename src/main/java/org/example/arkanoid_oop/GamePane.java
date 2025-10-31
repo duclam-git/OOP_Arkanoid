@@ -1,6 +1,7 @@
 package org.example.arkanoid_oop;
 
 import javafx.animation.AnimationTimer;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
@@ -225,8 +226,29 @@ public class GamePane extends Pane {
 
             if (ball.getBoundsInParent().intersects(brickView.getBoundsInParent())) {
 
+                Bounds ballBounds = ball.getBoundsInParent();
+                Bounds brickBounds = brickView.getBoundsInParent();
+
+                //TÍNH TOÁN VÙNG CHỒNG
+
+                double overlapX = Math.max(ballBounds.getMinX(), brickBounds.getMinX());
+                double overlapY = Math.max(ballBounds.getMinY(), brickBounds.getMinY());
+
+                double maxOverlapX = Math.min(ballBounds.getMaxX(), brickBounds.getMaxX());
+                double maxOverlapY = Math.min(ballBounds.getMaxY(), brickBounds.getMaxY());
+
+                // Tính Chiều rộng và Chiều cao của vùng chồng
+                double overlapWidth = maxOverlapX - overlapX;
+                double overlapHeight = maxOverlapY - overlapY;
+
                 boolean wasDestroyed = brick.onHit(); // Gạch bị va chạm
-                ball.reverseDy(); // Bóng nảy ra
+
+                // Xác định hướng nảy
+                if (overlapWidth < overlapHeight) {
+                    ball.reverseDx();
+                } else {
+                    ball.reverseDy();
+                }
 
                 if (wasDestroyed) {
                     // (SỬA LỖI) Xử lý logic PHIÊN BẢN GẠCH BỊ PHÁ HỦY
@@ -279,12 +301,17 @@ public class GamePane extends Pane {
 
     // (Hàm spawnPowerup() giữ nguyên)
     private void spawnPowerup(Powerup_brick brick) {
-        PowerupType type = brick.getPowerupType();
-        double x = brick.getCenterX();
-        double y = brick.getCenterY();
-        Powerup powerup = new Powerup(x, y, type);
-        powerups.add(powerup);
-        getChildren().add(powerup);
+        double chance = rand.nextDouble(); // Lấy một số ngẫu nhiên từ 0.0 đến 1.0
+
+        if (chance <= 0.25) {
+            PowerupType type = brick.getPowerupType();
+            double x = brick.getCenterX();
+            double y = brick.getCenterY();
+            Powerup powerup = new Powerup(x, y, type);
+            powerups.add(powerup);
+            getChildren().add(powerup);
+        }
+
     }
 
     // (Hàm activatePowerup() giữ nguyên)
