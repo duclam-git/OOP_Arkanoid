@@ -3,7 +3,7 @@ package org.example.arkanoid_oop.Brick;
 import javafx.scene.image.ImageView;
 
 public abstract class Brick {
-    public static final int BRICK_WIDTH = 20;
+    public static final int BRICK_WIDTH = 60;
     public static final int BRICK_HEIGHT = 20;
 
     protected double x;

@@ -5,6 +5,7 @@ import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.image.Image;
@@ -17,6 +18,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random; // (MỚI) Thêm thư viện Random
+
+import static org.example.arkanoid_oop.Brick.Brick.BRICK_HEIGHT;
+import static org.example.arkanoid_oop.Brick.Brick.BRICK_WIDTH;
 
 /**
  * GamePane là màn chơi chính, chứa tất cả các đối tượng game
@@ -102,13 +106,13 @@ public class GamePane extends Pane {
         double padding = 5; // Giảm padding để vừa nhiều gạch hơn
 
         // Tính toán lại để căn giữa
-        double totalBrickWidth = (brickCols * Brick.BRICK_WIDTH) + ((brickCols - 1) * padding);
+        double totalBrickWidth = (brickCols * BRICK_WIDTH) + ((brickCols - 1) * padding);
         double offsetLeft = (screenWidth - totalBrickWidth) / 2;
         double offsetTop = 50;
 
         for (int r = 0; r < brickRows; r++) {
             for (int c = 0; c < brickCols; c++) {
-                double x = offsetLeft + c * (Brick.BRICK_WIDTH + padding);
+                double x = offsetLeft + c * (BRICK_WIDTH + padding);
                 double y = offsetTop + r * (Brick.BRICK_HEIGHT + padding);
 
                 Brick brick = null;
@@ -301,11 +305,11 @@ public class GamePane extends Pane {
      * @param sourceExplosiveBrick Viên gạch gây ra vụ nổ
      */
     private void explode(Explosive_brick sourceExplosiveBrick) {
-        double x = sourceExplosiveBrick.getCenterX();
-        double y = sourceExplosiveBrick.getCenterY();
-        double explosionRadius = 100; // Bán kính 100px
+        int explosionRadius = 3; // Đường kính 3 ô gạch
 
-        Circle explosionArea = new Circle(x, y, explosionRadius);
+        Rectangle explosionArea = new Rectangle((int)sourceExplosiveBrick.getX() - BRICK_WIDTH * (explosionRadius / 2),
+                (int)sourceExplosiveBrick.getY() - BRICK_HEIGHT  * (explosionRadius / 2),
+                BRICK_WIDTH * explosionRadius, BRICK_HEIGHT * explosionRadius);
 
         // (MỚI) Tạo danh sách tạm thời để tránh lỗi
         List<Brick> bricksToRemove = new ArrayList<>();
