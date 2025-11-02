@@ -11,14 +11,13 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.shape.Circle;
 import org.example.arkanoid_oop.Brick.*;
 import org.example.arkanoid_oop.Entities.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random; // (MỚI) Thêm thư viện Random
+import java.util.Random;
 
 import static org.example.arkanoid_oop.Brick.Brick.BRICK_HEIGHT;
 import static org.example.arkanoid_oop.Brick.Brick.BRICK_WIDTH;
@@ -35,8 +34,8 @@ public class GamePane extends Pane {
     // Đối tượng game
     private Background background;
     private Paddle paddle;
-    private Ball ball; // Tạm thời vẫn là 1 quả bóng
-
+    // (SỬA LỖI) Chuyển thành danh sách Ball
+    private List<Ball> balls = new ArrayList<>();
     private List<Brick> bricks = new ArrayList<>();
     private List<Powerup> powerups = new ArrayList<>();
 
@@ -73,10 +72,8 @@ public class GamePane extends Pane {
         paddle = new Paddle(screenWidth, screenHeight);
         getChildren().add(paddle);
 
-        double ballStartX = paddle.getLayoutX() + (paddle.getBoundsInLocal().getWidth() / 2);
-        double ballStartY = paddle.getLayoutY() - 15;
-        ball = new Ball(screenWidth, screenHeight, ballStartX, ballStartY);
-        getChildren().add(ball);
+        // (SỬA LỖI) Gọi hàm khởi tạo bóng đầu tiên
+        spawnInitialBall();
 
         // Tạo gạch và thêm vào Pane
         createBricks();
@@ -95,6 +92,17 @@ public class GamePane extends Pane {
             }
         };
         gameLoop.start();
+    }
+
+    /**
+     * (MỚI) Tạo và thêm quả bóng đầu tiên vào danh sách.
+     */
+    private void spawnInitialBall() {
+        double ballStartX = paddle.getLayoutX() + (paddle.getBoundsInLocal().getWidth() / 2);
+        double ballStartY = paddle.getLayoutY() - 15;
+        Ball initialBall = new Ball(screenWidth, screenHeight, ballStartX, ballStartY);
+        balls.add(initialBall);
+        getChildren().add(initialBall);
     }
 
     /**
@@ -158,24 +166,32 @@ public class GamePane extends Pane {
         getChildren().addAll(heartIcon, livesText, scoreText, messageText);
     }
 
-    // (Hàm updateGame() giữ nguyên)
+    /**
+     * (CẬP NHẬT) Cập nhật trạng thái game, xử lý nhiều bóng.
+     */
     private void updateGame() {
         paddle.update(goLeft, goRight);
         updatePowerups(); // Luôn cập nhật vật phẩm rơi
 
         if (gameRunning) {
-            ball.update();
+            // (SỬA LỖI) Lặp qua tất cả các bóng
+            for (Ball ball : balls) {
+                ball.update();
+            }
             checkCollisions();
         } else {
-            // (Code bóng bám theo ván trượt)
-            double newBallX = paddle.getLayoutX() + (paddle.getBoundsInLocal().getWidth() / 2) - ball.getRadius();
-            double newBallY = paddle.getLayoutY() - 15 - (ball.getRadius() * 2);
-            ball.setLayoutX(newBallX);
-            ball.setLayoutY(newBallY);
+            // (SỬA LỖI) Code bóng bám theo ván trượt (chỉ áp dụng cho quả bóng đầu tiên)
+            if (!balls.isEmpty()) {
+                Ball ball = balls.get(0);
+                double newBallX = paddle.getLayoutX() + (paddle.getBoundsInLocal().getWidth() / 2) - ball.getRadius();
+                double newBallY = paddle.getLayoutY() - 15 - (ball.getRadius() * 2);
+                ball.setLayoutX(newBallX);
+                ball.setLayoutY(newBallY);
+            }
         }
     }
 
-    // (Hàm updatePowerups() giữ nguyên)
+    // (Hàm updatePowerups() được cập nhật để xử lý va chạm ở đây)
     private void updatePowerups() {
         Iterator<Powerup> it = powerups.iterator();
         while (it.hasNext()) {
@@ -186,99 +202,132 @@ public class GamePane extends Pane {
                 getChildren().remove(powerup);
                 it.remove();
             }
-        }
-    }
 
-    // (CẬP NHẬT) Xử lý tất cả va chạm
-    private void checkCollisions() {
-        // (Va chạm Bóng với Ván trượt)
-        if (ball.getBoundsInParent().intersects(paddle.getBoundsInParent())) {
-            if (ball.getLayoutY() + (ball.getRadius() * 2) - ball.getDy() <= paddle.getLayoutY()) {
-                ball.reverseDy();
-            }
-        }
-
-        // (Va chạm Bóng với Đáy)
-        if (ball.getLayoutY() >= screenHeight) {
-            loseLife();
-            return; // Dừng ngay lập tức
-        }
-
-        // (Va chạm Ván trượt với Vật phẩm)
-        Iterator<Powerup> powerupIt = powerups.iterator();
-        while (powerupIt.hasNext()) {
-            Powerup powerup = powerupIt.next();
+            // (Va chạm Ván trượt với Vật phẩm)
             if (paddle.getBoundsInParent().intersects(powerup.getBoundsInParent())) {
                 activatePowerup(powerup.getType());
                 getChildren().remove(powerup);
-                powerupIt.remove();
+                it.remove();
+            }
+        }
+    }
+
+    /**
+     * (CẬP NHẬT LỚN) Xử lý tất cả va chạm, đặc biệt là nhiều bóng và góc nảy mượt.
+     */
+    private void checkCollisions() {
+
+        // --- 1. KIỂM TRA VÀ XỬ LÝ BALL-PADDLE VÀ BALL RƠI XUỐNG ---
+        Iterator<Ball> ballIt = balls.iterator();
+        while (ballIt.hasNext()) {
+            Ball ball = ballIt.next();
+
+            // (Va chạm Bóng với Ván trượt) - (CẢI THIỆN: Dùng tính toán góc nảy)
+            if (ball.getBoundsInParent().intersects(paddle.getBoundsInParent())) {
+
+                // Đảm bảo bóng nảy lên (chỉ xử lý khi bóng đang đi xuống)
+                if (ball.getDy() > 0) {
+
+                    Bounds ballBounds = ball.getBoundsInParent();
+                    Bounds paddleBounds = paddle.getBoundsInParent();
+
+                    // Tính vị trí tương đối của điểm chạm trên Paddle (-1.0 là rìa trái, 1.0 là rìa phải)
+                    double hitPointX = ballBounds.getCenterX();
+                    double paddleCenter = paddleBounds.getCenterX();
+                    double paddleHalfWidth = paddleBounds.getWidth() / 2.0;
+
+                    double relativeHit = (hitPointX - paddleCenter) / paddleHalfWidth;
+
+                    // Thiết lập hướng nảy mới (Dx max = 1.5 * Tốc độ, Dy luôn âm)
+                    // Tốc độ ngang càng lớn nếu chạm càng gần rìa
+
+                    double newDx = relativeHit * (ball.getSpeed() * 1.5); // Nhân 1.5 để tăng độ nhạy
+                    double newDy = -ball.getSpeed();
+
+                    ball.setDirection(newDx, newDy);
+
+                }
+            }
+
+            // (Va chạm Bóng với Đáy)
+            if (ball.getLayoutY() >= screenHeight) {
+                getChildren().remove(ball);
+                ballIt.remove();
+
+                if (balls.isEmpty()) {
+                    // Nếu không còn bóng nào, mất một mạng
+                    loseLife();
+                    return; // Dừng ngay lập tức
+                }
             }
         }
 
-        // Va chạm Bóng với Gạch
+        // --- 2. XỬ LÝ VA CHẠM BALL-BRICK (Chỉ xử lý nếu còn bóng) ---
+        if (balls.isEmpty()) return;
+
         // (MỚI) Tạo danh sách tạm thời để xử lý gạch nổ
         List<Brick> bricksToExplode = new ArrayList<>();
 
-        Iterator<Brick> brickIt = bricks.iterator();
-        while (brickIt.hasNext()) {
-            Brick brick = brickIt.next();
-            Node brickView = brick.getView();
+        // (SỬA LỖI) Lặp qua các bóng, rồi mới lặp qua gạch
+        for (Ball ball : balls) {
+            Iterator<Brick> brickIt = bricks.iterator();
+            while (brickIt.hasNext()) {
+                Brick brick = brickIt.next();
+                Node brickView = brick.getView();
 
-            if (ball.getBoundsInParent().intersects(brickView.getBoundsInParent())) {
+                if (ball.getBoundsInParent().intersects(brickView.getBoundsInParent())) {
 
-                Bounds ballBounds = ball.getBoundsInParent();
-                Bounds brickBounds = brickView.getBoundsInParent();
+                    Bounds ballBounds = ball.getBoundsInParent();
+                    Bounds brickBounds = brickView.getBoundsInParent();
 
-                //TÍNH TOÁN VÙNG CHỒNG
+                    //TÍNH TOÁN VÙNG CHỒNG
+                    double overlapX = Math.max(ballBounds.getMinX(), brickBounds.getMinX());
+                    double overlapY = Math.max(ballBounds.getMinY(), brickBounds.getMinY());
 
-                double overlapX = Math.max(ballBounds.getMinX(), brickBounds.getMinX());
-                double overlapY = Math.max(ballBounds.getMinY(), brickBounds.getMinY());
+                    double maxOverlapX = Math.min(ballBounds.getMaxX(), brickBounds.getMaxX());
+                    double maxOverlapY = Math.min(ballBounds.getMaxY(), brickBounds.getMaxY());
 
-                double maxOverlapX = Math.min(ballBounds.getMaxX(), brickBounds.getMaxX());
-                double maxOverlapY = Math.min(ballBounds.getMaxY(), brickBounds.getMaxY());
+                    // Tính Chiều rộng và Chiều cao của vùng chồng
+                    double overlapWidth = maxOverlapX - overlapX;
+                    double overlapHeight = maxOverlapY - overlapY;
 
-                // Tính Chiều rộng và Chiều cao của vùng chồng
-                double overlapWidth = maxOverlapX - overlapX;
-                double overlapHeight = maxOverlapY - overlapY;
+                    boolean wasDestroyed = brick.onHit(); // Gạch bị va chạm
 
-                boolean wasDestroyed = brick.onHit(); // Gạch bị va chạm
-
-                // Xác định hướng nảy
-                if (overlapWidth < overlapHeight) {
-                    ball.reverseDx();
-                } else {
-                    ball.reverseDy();
-                }
-
-                if (wasDestroyed) {
-                    // (SỬA LỖI) Xử lý logic PHIÊN BẢN GẠCH BỊ PHÁ HỦY
-
-                    // 1. Xóa gạch bị bóng đập
-                    brickIt.remove();
-                    getChildren().remove(brickView);
-                    score += brick.getScoreValue();
-
-                    // 2. Kiểm tra xem có phải gạch nổ không
-                    if (brick instanceof Explosive_brick) {
-                        // Thêm vào danh sách chờ nổ
-                        bricksToExplode.add(brick);
+                    // Xác định hướng nảy
+                    if (overlapWidth < overlapHeight) {
+                        ball.reverseDx();
+                    } else {
+                        ball.reverseDy();
                     }
 
-                    // 3. (SỬA LỖI) Kiểm tra xem có phải gạch vật phẩm không
-                    if (brick instanceof Powerup_brick) {
-                        spawnPowerup((Powerup_brick) brick);
+                    if (wasDestroyed) {
+                        // 1. Xóa gạch bị bóng đập
+                        brickIt.remove();
+                        getChildren().remove(brickView);
+                        score += brick.getScoreValue();
+
+                        // 2. Kiểm tra xem có phải gạch nổ không
+                        if (brick instanceof Explosive_brick) {
+                            // Thêm vào danh sách chờ nổ
+                            bricksToExplode.add(brick);
+                        }
+
+                        // 3. Kiểm tra xem có phải gạch vật phẩm không
+                        if (brick instanceof Powerup_brick) {
+                            spawnPowerup((Powerup_brick) brick);
+                        }
                     }
+
+                    scoreText.setText("Score: " + score);
+
+                    // Mỗi quả bóng chỉ phá 1 gạch mỗi khung hình
+                    break;
                 }
-
-                scoreText.setText("Score: " + score);
-
-                // Chỉ xử lý 1 va chạm mỗi khung hình
-                break;
             }
         }
 
-        // (MỚI) Xử lý các vụ nổ (sau khi vòng lặp va chạm chính kết thúc)
-        // Điều này tránh lỗi ConcurrentModificationException
+
+        // (MỚI) Xử lý các vụ nổ
         if (!bricksToExplode.isEmpty()) {
             for (Brick explosiveBrick : bricksToExplode) {
                 // ép kiểu an toàn
@@ -290,7 +339,7 @@ public class GamePane extends Pane {
             scoreText.setText("Score: " + score);
         }
 
-        // Kiểm tra thắng (sau khi tất cả gạch đã nổ)
+        // Kiểm tra thắng
         if (bricks.isEmpty()) {
             gameRunning = false;
             messageText.setText("YOU WIN! Press R to Restart");
@@ -314,11 +363,14 @@ public class GamePane extends Pane {
 
     }
 
-    // (Hàm activatePowerup() giữ nguyên)
+    /**
+     * (CẬP NHẬT) Xử lý kích hoạt Powerup.
+     * @param type Loại Powerup được kích hoạt.
+     */
     private void activatePowerup(PowerupType type) {
         if (type == PowerupType.MULTI_BALL) {
             System.out.println("KÍCH HOẠT MULTI-BALL!");
-            // (Logic nhân bóng sẽ ở đây)
+            spawnMultiBall(); // (MỚI) Triển khai logic Multi-Ball
         }
         else if (type == PowerupType.LASER_PADDLE) {
             System.out.println("KÍCH HOẠT LASER PADDLE!");
@@ -326,11 +378,30 @@ public class GamePane extends Pane {
         }
     }
 
-
     /**
-     * (CẬP NHẬT) Xử lý logic Gạch Nổ
-     * @param sourceExplosiveBrick Viên gạch gây ra vụ nổ
+     * (MỚI) Triển khai logic Multi-Ball: Tạo thêm 2 quả bóng.
      */
+    private void spawnMultiBall() {
+        if (balls.isEmpty()) return; // Không thể nhân bản nếu không có bóng nào
+
+        Ball sourceBall = balls.get(0); // Lấy quả bóng đầu tiên để làm mốc vị trí
+        double ballX = sourceBall.getLayoutX() + sourceBall.getRadius();
+        double ballY = sourceBall.getLayoutY() + sourceBall.getRadius();
+        double speed = sourceBall.getSpeed(); // Lấy tốc độ cơ sở
+
+        // Bóng 1: Hướng X trái mạnh, Y lên
+        Ball newBall1 = new Ball(ballX, ballY, screenWidth, screenHeight, -speed * 1.5, -speed * 0.5);
+        balls.add(newBall1);
+        getChildren().add(newBall1);
+
+        // Bóng 2: Hướng X phải mạnh, Y lên
+        Ball newBall2 = new Ball(ballX, ballY, screenWidth, screenHeight, speed * 1.5, -speed * 0.5);
+        balls.add(newBall2);
+        getChildren().add(newBall2);
+    }
+
+
+    // (Hàm explode() giữ nguyên)
     private void explode(Explosive_brick sourceExplosiveBrick) {
         int explosionRadius = 3; // Đường kính 3 ô gạch
 
@@ -381,11 +452,20 @@ public class GamePane extends Pane {
     }
 
 
-    // (Hàm loseLife() giữ nguyên)
+    /**
+     * (CẬP NHẬT) Xử lý mất mạng.
+     */
     private void loseLife() {
         lives--;
         livesText.setText("x " + lives);
         gameRunning = false;
+
+        // (SỬA LỖI) Xóa tất cả các bóng còn lại
+        for (Ball ball : balls) {
+            getChildren().remove(ball);
+        }
+        balls.clear();
+
         if (lives <= 0) {
             messageText.setText("GAME OVER! Press R to Restart");
             messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
@@ -395,11 +475,13 @@ public class GamePane extends Pane {
             messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
             messageText.setVisible(true);
             paddle.reset();
-            ball.reset();
+            spawnInitialBall(); // Tạo lại bóng
         }
     }
 
-    // (Hàm resetGame() giữ nguyên)
+    /**
+     * (CẬP NHẬT) Reset game.
+     */
     private void resetGame() {
         lives = 3;
         livesText.setText("x " + lives);
@@ -407,7 +489,13 @@ public class GamePane extends Pane {
         scoreText.setText("Score: 0");
 
         paddle.reset();
-        ball.reset();
+
+        // Xóa bóng cũ
+        for (Ball ball : balls) {
+            getChildren().remove(ball);
+        }
+        balls.clear();
+        spawnInitialBall(); // Tạo lại bóng
 
         // Xóa gạch cũ
         for (Brick brick : bricks) {
@@ -439,7 +527,8 @@ public class GamePane extends Pane {
         if (code == KeyCode.A || code == KeyCode.LEFT) goLeft = true;
         if (code == KeyCode.D || code == KeyCode.RIGHT) goRight = true;
         if (code == KeyCode.SPACE) {
-            if (!gameRunning && lives > 0) {
+            // (SỬA LỖI) Chỉ cho phép bắt đầu nếu có ít nhất 1 quả bóng
+            if (!gameRunning && lives > 0 && !balls.isEmpty()) {
                 gameRunning = true;
                 messageText.setVisible(false);
             }

@@ -10,7 +10,7 @@ import javafx.scene.image.ImageView;
 public class Paddle extends ImageView {
 
     private static final double PADDLE_WIDTH_DISPLAY = 120;
-    private static final int PADDLE_SPEED = 10;
+    private static final int PADDLE_SPEED = 6;
 
     private double screenWidth;
     private double currentWidth; // Chiều rộng thực tế sau khi đặt ảnh
