@@ -38,6 +38,14 @@ public class GamePane extends Pane {
     private List<Brick> bricks = new ArrayList<>();
     private List<Powerup> powerups = new ArrayList<>();
 
+    // (MỚI CHO LASER)
+    private boolean isLaserActive = false;
+    private List<Laser> lasers = new ArrayList<>(); // Danh sách quản lý các tia laser đang hoạt động
+    private long laserEndTime = 0; // Thời điểm laser hết hạn (nanoTime)
+    private long lastShotTime = 0; // Thời điểm bắn laser gần nhất (nanoTime)
+    private final long LASER_DURATION_NANO = 4_000_000_000L; // 5 giây (nano = 1 tỷ)
+    private final long SHOT_INTERVAL_NANO = 800_000_000L; // 0.5 giây
+
     // Trạng thái input
     private boolean goLeft = false;
     private boolean goRight = false;
@@ -46,7 +54,7 @@ public class GamePane extends Pane {
     private boolean gameRunning = false;
     private int lives = 3;
     private int score = 0;
-    private int level = 1; // (MỚI) Biến theo dõi cấp độ
+    private int level = 1;
 
     // Thêm một đối tượng Random
     private Random rand = new Random();
@@ -56,7 +64,7 @@ public class GamePane extends Pane {
     private Text livesText;
     private Text scoreText;
     private Text messageText;
-    private Text levelText; // (MỚI) Text hiển thị cấp độ
+    private Text levelText;
 
     private AnimationTimer gameLoop;
 
@@ -88,7 +96,7 @@ public class GamePane extends Pane {
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                updateGame();
+                updateGame(now); // Truyền thời gian hiện tại vào
             }
         };
         gameLoop.start();
@@ -105,12 +113,10 @@ public class GamePane extends Pane {
 
     // (Hàm createBricks() giữ nguyên)
     private void createBricks() {
-        // (MỚI) Tăng số lượng gạch
         int brickRows = 7;
         int brickCols = 10;
-        double padding = 5; // Giảm padding để vừa nhiều gạch hơn
+        double padding = 5;
 
-        // Tính toán lại để căn giữa
         double totalBrickWidth = (brickCols * BRICK_WIDTH) + ((brickCols - 1) * padding);
         double offsetLeft = (screenWidth - totalBrickWidth) / 2;
         double offsetTop = 50;
@@ -121,20 +127,18 @@ public class GamePane extends Pane {
                 double y = offsetTop + r * (Brick.BRICK_HEIGHT + padding);
 
                 Brick brick = null;
+                double chance = rand.nextDouble();
 
-                // --- (MỚI) Logic tạo gạch ngẫu nhiên ---
-                double chance = rand.nextDouble(); // Lấy một số ngẫu nhiên từ 0.0 đến 1.0
-
-                if (chance < 0.1) { // 10% cơ hội là gạch nổ
+                if (chance < 0.1) {
                     brick = new Explosive_brick(x, y);
                 }
-                else if (chance < 0.25) { // 15% cơ hội là gạch vật phẩm
+                else if (chance < 0.25) {
                     brick = new Powerup_brick(x, y);
                 }
-                else if (chance < 0.45) { // 20% cơ hội là gạch cứng
+                else if (chance < 0.45) {
                     brick = new Hard_brick(x, y);
                 }
-                else { // 55% còn lại là gạch thường
+                else {
                     brick = new Normal_brick(x, y);
                 }
 
@@ -143,11 +147,8 @@ public class GamePane extends Pane {
         }
     }
 
-    /**
-     * (CẬP NHẬT) Khởi tạo HUD, thêm Level Text.
-     */
+    // (Hàm createHUD() giữ nguyên)
     private void createHUD() {
-        // Lives
         Image heartImage = new Image(getClass().getResourceAsStream("/images/heart.png"));
         heartIcon = new ImageView(heartImage);
         heartIcon.setFitWidth(25); heartIcon.setFitHeight(25);
@@ -156,35 +157,36 @@ public class GamePane extends Pane {
         livesText.setFont(Font.font("Arial", 20)); livesText.setFill(Color.WHITE);
         livesText.setLayoutX(40); livesText.setLayoutY(30);
 
-        // Score
         scoreText = new Text("Score: 0");
         scoreText.setFont(Font.font("Arial", 20)); scoreText.setFill(Color.WHITE);
         scoreText.setLayoutX(screenWidth - 120); scoreText.setLayoutY(30);
 
-        // (MỚI) Level Text - Đặt ở giữa Score và Lives
         levelText = new Text("Level: " + level);
         levelText.setFont(Font.font("Arial", 20)); levelText.setFill(Color.WHITE);
-        // Tính toán vị trí X để căn giữa
-        double levelTextWidth = 100; // Giả sử độ rộng cố định để căn giữa
+        double levelTextWidth = 100;
         levelText.setLayoutX((screenWidth - levelTextWidth) / 2);
         levelText.setLayoutY(30);
 
-        // Message
         messageText = new Text("Press SPACE to Start");
         messageText.setFont(Font.font("Arial", 30)); messageText.setFill(Color.WHITE);
         messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
         messageText.setLayoutY(screenHeight / 2);
 
-        // Thêm Level Text vào Pane
         getChildren().addAll(heartIcon, livesText, scoreText, messageText, levelText);
     }
 
-    // (Hàm updateGame() giữ nguyên)
-    private void updateGame() {
+    /**
+     * (CẬP NHẬT) Cập nhật trạng thái game, xử lý laser.
+     */
+    private void updateGame(long now) {
         paddle.update(goLeft, goRight);
-        updatePowerups(); // Luôn cập nhật vật phẩm rơi
+        updatePowerups();
 
         if (gameRunning) {
+
+            // Xử lý Laser (MỚI)
+            updateLasers(now);
+
             for (Ball ball : balls) {
                 ball.update();
             }
@@ -200,19 +202,75 @@ public class GamePane extends Pane {
         }
     }
 
+    /**
+     * (MỚI) Cập nhật trạng thái Laser và bắn đạn.
+     * @param now Thời gian hiện tại (nanoTime).
+     */
+    private void updateLasers(long now) {
+        // --- 1. KIỂM TRA HẾT HẠN LASER ---
+        if (isLaserActive && now > laserEndTime) {
+            isLaserActive = false;
+        }
+
+        // --- 2. XỬ LÝ BẮN LASER ---
+        if (isLaserActive && now > lastShotTime + SHOT_INTERVAL_NANO) {
+            shootLasers();
+            lastShotTime = now;
+        }
+
+        // --- 3. CẬP NHẬT VỊ TRÍ LASER ---
+        Iterator<Laser> laserIt = lasers.iterator();
+        while (laserIt.hasNext()) {
+            Laser laser = laserIt.next();
+
+            // Cập nhật vị trí và kiểm tra nếu ra khỏi màn hình
+            if (laser.update()) {
+                getChildren().remove(laser);
+                laserIt.remove();
+            }
+        }
+    }
+
+    /**
+     * (MỚI) Bắn hai tia laser từ hai bên Paddle.
+     */
+    private void shootLasers() {
+        double paddleY = paddle.getLayoutY();
+        double paddleWidth = paddle.getBoundsInLocal().getWidth();
+        double paddleX = paddle.getLayoutX();
+
+        // Vị trí bắn laser bên trái (cách mép trái 10px)
+        double leftGunX = paddleX + 10;
+
+        // Vị trí bắn laser bên phải (cách mép phải 10px)
+        double rightGunX = paddleX + paddleWidth - 10;
+
+        // Cùng vị trí Y (đỉnh của paddle)
+        double gunY = paddleY;
+
+        // Tạo laser trái
+        Laser laser1 = new Laser(leftGunX, gunY);
+        lasers.add(laser1);
+        getChildren().add(laser1);
+
+        // Tạo laser phải
+        Laser laser2 = new Laser(rightGunX, gunY);
+        lasers.add(laser2);
+        getChildren().add(laser2);
+    }
+
     // (Hàm updatePowerups() giữ nguyên)
     private void updatePowerups() {
         Iterator<Powerup> it = powerups.iterator();
         while (it.hasNext()) {
             Powerup powerup = it.next();
-            powerup.update(); // Làm vật phẩm rơi xuống
+            powerup.update();
 
             if (powerup.getLayoutY() > screenHeight) {
                 getChildren().remove(powerup);
                 it.remove();
             }
 
-            // (Va chạm Ván trượt với Vật phẩm)
             if (paddle.getBoundsInParent().intersects(powerup.getBoundsInParent())) {
                 activatePowerup(powerup.getType());
                 getChildren().remove(powerup);
@@ -223,21 +281,23 @@ public class GamePane extends Pane {
 
     // (Hàm removeAndRespawnBall() giữ nguyên)
     private void removeAndRespawnBall() {
-        // Xóa tất cả các bóng hiện có
         for (Ball ball : balls) {
             getChildren().remove(ball);
         }
         balls.clear();
-
-        // Tạo lại bóng ban đầu, nó sẽ tự động bám theo Paddle khi gameRunning=false
         spawnInitialBall();
     }
 
-    /**
-     * (CẬP NHẬT) Thiết lập trạng thái và tạo gạch cho cấp độ tiếp theo, tăng Level.
-     */
+    // (Hàm startNextLevel() cập nhật)
     private void startNextLevel() {
-        level++; // (QUAN TRỌNG) Tăng cấp độ
+        level++;
+
+        // Xóa laser cũ (MỚI)
+        isLaserActive = false;
+        for (Laser laser : lasers) {
+            getChildren().remove(laser);
+        }
+        lasers.clear();
 
         // 1. Xóa vật phẩm (Powerups) còn sót lại
         for (Powerup powerup : powerups) {
@@ -257,13 +317,15 @@ public class GamePane extends Pane {
         }
 
         // 4. Cập nhật HUD
-        levelText.setText("Level: " + level); // Cập nhật Level Text
+        levelText.setText("Level: " + level);
         messageText.setText("LEVEL CLEARED! Press SPACE to continue.");
         messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
         messageText.setVisible(true);
     }
 
-    // (Hàm checkCollisions() giữ nguyên)
+    /**
+     * (CẬP NHẬT LỚN) Xử lý tất cả va chạm, thêm logic Laser-Brick.
+     */
     private void checkCollisions() {
 
         // --- 1. KIỂM TRA VÀ XỬ LÝ BALL-PADDLE VÀ BALL RƠI XUỐNG ---
@@ -271,24 +333,19 @@ public class GamePane extends Pane {
         while (ballIt.hasNext()) {
             Ball ball = ballIt.next();
 
+            // ... (Ball-Paddle collision logic giữ nguyên)
             if (ball.getBoundsInParent().intersects(paddle.getBoundsInParent())) {
 
                 if (ball.getDy() > 0) {
-
                     Bounds ballBounds = ball.getBoundsInParent();
                     Bounds paddleBounds = paddle.getBoundsInParent();
-
                     double hitPointX = ballBounds.getCenterX();
                     double paddleCenter = paddleBounds.getCenterX();
                     double paddleHalfWidth = paddleBounds.getWidth() / 2.0;
-
                     double relativeHit = (hitPointX - paddleCenter) / paddleHalfWidth;
-
                     double newDx = relativeHit * (ball.getSpeed() * 1.5);
                     double newDy = -ball.getSpeed();
-
                     ball.setDirection(newDx, newDy);
-
                 }
             }
 
@@ -304,8 +361,39 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- 2. XỬ LÝ VA CHẠM BALL-BRICK ---
-        if (balls.isEmpty()) return;
+        // --- 2. XỬ LÝ VA CHẠM LASER-BRICK (MỚI) ---
+        List<Brick> bricksHitByLaser = new ArrayList<>();
+        Iterator<Laser> laserIt = lasers.iterator();
+
+        while (laserIt.hasNext()) {
+            Laser laser = laserIt.next();
+            Iterator<Brick> brickIt = bricks.iterator(); // Loop over remaining bricks
+
+            while (brickIt.hasNext()) {
+                Brick brick = brickIt.next();
+                Node brickView = brick.getView();
+
+                if (laser.getBoundsInParent().intersects(brickView.getBoundsInParent())) {
+
+                    boolean wasDestroyed = brick.onHit(); // Gạch mất 1 máu
+
+                    // Xóa Laser
+                    getChildren().remove(laser);
+                    laserIt.remove();
+
+                    if (wasDestroyed) {
+                        // Lưu vào danh sách để xử lý nổ/xóa sau
+                        bricksHitByLaser.add(brick);
+                    }
+
+                    scoreText.setText("Score: " + score);
+                    break; // Laser chỉ chạm một gạch
+                }
+            }
+        }
+
+        // --- 3. XỬ LÝ VA CHẠM BALL-BRICK ---
+        if (balls.isEmpty() && bricksHitByLaser.isEmpty()) return; // Thoát nếu không có gì để va chạm
 
         List<Brick> bricksToExplode = new ArrayList<>();
 
@@ -320,13 +408,10 @@ public class GamePane extends Pane {
                     Bounds ballBounds = ball.getBoundsInParent();
                     Bounds brickBounds = brickView.getBoundsInParent();
 
-                    //TÍNH TOÁN VÙNG CHỒNG
                     double overlapX = Math.max(ballBounds.getMinX(), brickBounds.getMinX());
                     double overlapY = Math.max(ballBounds.getMinY(), brickBounds.getMinY());
-
                     double maxOverlapX = Math.min(ballBounds.getMaxX(), brickBounds.getMaxX());
                     double maxOverlapY = Math.min(ballBounds.getMaxY(), brickBounds.getMaxY());
-
                     double overlapWidth = maxOverlapX - overlapX;
                     double overlapHeight = maxOverlapY - overlapY;
 
@@ -358,7 +443,26 @@ public class GamePane extends Pane {
             }
         }
 
+        // --- 4. XỬ LÝ GẠCH BỊ LASER PHÁ HỦY HOÀN TOÀN ---
+        // Xử lý các gạch mà laser đã bắn vỡ (vì laser không tự xóa gạch khỏi list bricks)
+        for (Brick brick : bricksHitByLaser) {
+            if (bricks.contains(brick)) {
+                bricks.remove(brick);
+                getChildren().remove(brick.getView());
+                score += brick.getScoreValue();
 
+                if (brick instanceof Explosive_brick) {
+                    bricksToExplode.add(brick);
+                }
+                if (brick instanceof Powerup_brick) {
+                    spawnPowerup((Powerup_brick) brick);
+                }
+            }
+            scoreText.setText("Score: " + score);
+        }
+
+
+        // --- 5. Xử lý các vụ nổ (Explosion logic giữ nguyên) ---
         if (!bricksToExplode.isEmpty()) {
             for (Brick explosiveBrick : bricksToExplode) {
                 if (explosiveBrick instanceof Explosive_brick) {
@@ -368,6 +472,7 @@ public class GamePane extends Pane {
             scoreText.setText("Score: " + score);
         }
 
+        // --- 6. Kiểm tra chuyển cấp độ ---
         if (bricks.isEmpty()) {
             startNextLevel();
         }
@@ -375,7 +480,7 @@ public class GamePane extends Pane {
 
     // (Hàm spawnPowerup() giữ nguyên)
     private void spawnPowerup(Powerup_brick brick) {
-        double chance = rand.nextDouble(); // Lấy một số ngẫu nhiên từ 0.0 đến 1.0
+        double chance = rand.nextDouble();
 
         if (chance <= 0.25) {
             PowerupType type = brick.getPowerupType();
@@ -388,14 +493,23 @@ public class GamePane extends Pane {
 
     }
 
-    // (Hàm activatePowerup() giữ nguyên)
+    /**
+     * (CẬP NHẬT) Xử lý kích hoạt Powerup, thêm logic Laser.
+     */
     private void activatePowerup(PowerupType type) {
         if (type == PowerupType.MULTI_BALL) {
             System.out.println("KÍCH HOẠT MULTI-BALL!");
             spawnMultiBall();
         }
         else if (type == PowerupType.LASER_PADDLE) {
-            System.out.println("KÍCH HOẠT LASER PADDLE!");
+            System.out.println("KÍCH HOẠT LASER PADDLE! (5 giây)");
+
+            // Kích hoạt Laser
+            isLaserActive = true;
+            // Thiết lập thời điểm kết thúc
+            laserEndTime = System.nanoTime() + LASER_DURATION_NANO;
+            // Đặt thời điểm bắn đầu tiên ngay lập tức
+            lastShotTime = 0;
         }
     }
 
@@ -420,7 +534,7 @@ public class GamePane extends Pane {
 
     // (Hàm explode() giữ nguyên)
     private void explode(Explosive_brick sourceExplosiveBrick) {
-        int explosionRadius = 3; // Đường kính 3 ô gạch
+        int explosionRadius = 3;
 
         Rectangle explosionArea = new Rectangle((int)sourceExplosiveBrick.getX() - BRICK_WIDTH * (explosionRadius / 2),
                 (int)sourceExplosiveBrick.getY() - BRICK_HEIGHT  * (explosionRadius / 2),
@@ -458,11 +572,20 @@ public class GamePane extends Pane {
     }
 
 
-    // (Hàm loseLife() giữ nguyên)
+    /**
+     * (CẬP NHẬT) Xử lý mất mạng, thêm dọn dẹp Laser.
+     */
     private void loseLife() {
         lives--;
         livesText.setText("x " + lives);
         gameRunning = false;
+
+        // Xóa laser cũ (MỚI)
+        isLaserActive = false;
+        for (Laser laser : lasers) {
+            getChildren().remove(laser);
+        }
+        lasers.clear();
 
         removeAndRespawnBall();
 
@@ -479,15 +602,22 @@ public class GamePane extends Pane {
     }
 
     /**
-     * (CẬP NHẬT) Reset game, đặt Level về 1.
+     * (CẬP NHẬT) Reset game, thêm dọn dẹp Laser.
      */
     private void resetGame() {
         lives = 3;
         livesText.setText("x " + lives);
         score = 0;
         scoreText.setText("Score: 0");
-        level = 1; // (QUAN TRỌNG) Đặt lại Level
-        levelText.setText("Level: " + level); // Cập nhật HUD
+        level = 1;
+        levelText.setText("Level: " + level);
+
+        // Xóa laser cũ (MỚI)
+        isLaserActive = false;
+        for (Laser laser : lasers) {
+            getChildren().remove(laser);
+        }
+        lasers.clear();
 
         paddle.reset();
 
