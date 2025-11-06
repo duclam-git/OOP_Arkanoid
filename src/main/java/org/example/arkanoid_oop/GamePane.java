@@ -6,7 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Rectangle; // Import cần thiết cho Rectangle
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.image.Image;
@@ -39,13 +39,22 @@ public class GamePane extends Pane {
     private List<Powerup> powerups = new ArrayList<>();
     private List<Teleporter> teleporters = new ArrayList<>();
 
-    // (MỚI CHO LASER)
+    // (LASER)
     private boolean isLaserActive = false;
-    private List<Laser> lasers = new ArrayList<>(); // Danh sách quản lý các tia laser đang hoạt động
-    private long laserEndTime = 0; // Thời điểm laser hết hạn (nanoTime)
-    private long lastShotTime = 0; // Thời điểm bắn laser gần nhất (nanoTime)
-    private final long LASER_DURATION_NANO = 4_000_000_000L; // 4 giây
-    private final long SHOT_INTERVAL_NANO = 800_000_000L; // 0.8 giây (0.5 giây trong code gốc, điều chỉnh lại theo giá trị đã định nghĩa)
+    private List<Laser> lasers = new ArrayList<>();
+    private long laserEndTime = 0;
+    private long lastShotTime = 0;
+    private final long LASER_DURATION_NANO = 4_000_000_000L;
+    private final long SHOT_INTERVAL_NANO = 800_000_000L;
+
+    // (DOUBLE PADDLE)
+    private boolean isDoublePaddleActive = false;
+    private long doublePaddleEndTime = 0;
+    private final long DOUBLE_PADDLE_DURATION_NANO = 10_000_000_000L;
+
+    // (SHIELD)
+    private boolean isShieldActive = false;
+    private Rectangle shieldBar; // NEW: Đối tượng hiển thị thanh chắn
 
     // Trạng thái input
     private boolean goLeft = false;
@@ -90,22 +99,34 @@ public class GamePane extends Pane {
             getChildren().add(brick.getView());
         }
 
-        createTeleporters(); // Giữ lại hàm tạo Teleporter
+        createTeleporters();
 
         // Khởi tạo giao diện
         createHUD();
+        createShieldBar(); // NEW: Khởi tạo Shield Bar
 
         // Bắt đầu vòng lặp game
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                updateGame(now); // Truyền thời gian hiện tại vào
+                updateGame(now);
             }
         };
         gameLoop.start();
     }
 
-    // (Hàm spawnInitialBall() giữ nguyên)
+    // NEW: Hàm tạo thanh chắn (Shield Bar)
+    private void createShieldBar() {
+        double barHeight = 5;
+        // Tạo Rectangle bao phủ toàn bộ chiều rộng, dày 5px, nằm ngay trên đáy map
+        shieldBar = new Rectangle(0, screenHeight - barHeight, screenWidth, barHeight);
+        shieldBar.setFill(Color.AQUA); // Màu xanh dương để dễ nhận biết
+        shieldBar.setOpacity(0.7); // Hơi trong suốt
+        shieldBar.setVisible(false); // Ẩn ban đầu
+
+        getChildren().add(shieldBar);
+    }
+
     private void spawnInitialBall() {
         double ballStartX = paddle.getLayoutX() + (paddle.getBoundsInLocal().getWidth() / 2);
         double ballStartY = paddle.getLayoutY() - 15;
@@ -114,7 +135,6 @@ public class GamePane extends Pane {
         getChildren().add(initialBall);
     }
 
-    // (Hàm createBricks() giữ nguyên)
     private void createBricks() {
         int brickRows = 7;
         int brickCols = 10;
@@ -150,34 +170,26 @@ public class GamePane extends Pane {
         }
     }
 
-    /**
-     * Hàm createTeleporters() (Đã giải quyết xung đột, giữ lại phiên bản thêm Teleporter)
-     */
     private void createTeleporters() {
-        // Vị trí cố định cho cổng 1
         double teleporter1X = 100;
         double teleporter1Y = 400;
 
-        // Vị trí cho cổng 2
         double teleporter2X = screenWidth - 100;
         double teleporter2Y = 400;
 
         Teleporter teleporter1 = new Teleporter(teleporter1X, teleporter1Y);
         Teleporter teleporter2 = new Teleporter(teleporter2X, teleporter2Y);
 
-        // Thiết lập liên kết
         teleporter1.setPartner(teleporter2);
         teleporter2.setPartner(teleporter1);
 
-        // Thêm vào danh sách và Pane
         teleporters.add(teleporter1);
         teleporters.add(teleporter2);
         getChildren().addAll(teleporter1, teleporter2);
     }
 
-    // (Hàm createHUD() giữ nguyên)
     private void createHUD() {
-        Image heartImage = new Image(getClass().getResourceAsStream("/images/heart.png"));
+        Image heartImage = new Image(getClass().getResourceAsStream("/images/Heart.png"));
         heartIcon = new ImageView(heartImage);
         heartIcon.setFitWidth(25); heartIcon.setFitHeight(25);
         heartIcon.setLayoutX(10); heartIcon.setLayoutY(10);
@@ -204,21 +216,28 @@ public class GamePane extends Pane {
     }
 
     /**
-     * (CẬP NHẬT) Cập nhật trạng thái game, xử lý laser.
+     * (CẬP NHẬT) Cập nhật trạng thái game, xử lý laser và double paddle hết hạn.
      */
     private void updateGame(long now) {
         paddle.update(goLeft, goRight);
         updatePowerups();
 
+        // --- KIỂM TRA HẾT HẠN POWERUP ---
+        if (isDoublePaddleActive && now > doublePaddleEndTime) {
+            paddle.setNormalLength();
+            isDoublePaddleActive = false;
+            System.out.println("DOUBLE PADDLE HẾT HẠN.");
+        }
+        // ---------------------------------
+
         if (gameRunning) {
 
-            // Xử lý Laser (MỚI)
             updateLasers(now);
 
             for (Ball ball : balls) {
                 ball.update();
             }
-            checkCollisions(now); // Truyền thời gian hiện tại
+            checkCollisions(now);
         } else {
             if (!balls.isEmpty()) {
                 Ball ball = balls.get(0);
@@ -230,10 +249,6 @@ public class GamePane extends Pane {
         }
     }
 
-    /**
-     * (MỚI) Cập nhật trạng thái Laser và bắn đạn.
-     * @param now Thời gian hiện tại (nanoTime).
-     */
     private void updateLasers(long now) {
         // --- 1. KIỂM TRA HẾT HẠN LASER ---
         if (isLaserActive && now > laserEndTime) {
@@ -251,7 +266,6 @@ public class GamePane extends Pane {
         while (laserIt.hasNext()) {
             Laser laser = laserIt.next();
 
-            // Cập nhật vị trí và kiểm tra nếu ra khỏi màn hình
             if (laser.update()) {
                 getChildren().remove(laser);
                 laserIt.remove();
@@ -259,35 +273,25 @@ public class GamePane extends Pane {
         }
     }
 
-    /**
-     * (MỚI) Bắn hai tia laser từ hai bên Paddle.
-     */
     private void shootLasers() {
         double paddleY = paddle.getLayoutY();
         double paddleWidth = paddle.getBoundsInLocal().getWidth();
         double paddleX = paddle.getLayoutX();
 
-        // Vị trí bắn laser bên trái (cách mép trái 10px)
         double leftGunX = paddleX + 10;
-
-        // Vị trí bắn laser bên phải (cách mép phải 10px)
         double rightGunX = paddleX + paddleWidth - 10;
 
-        // Cùng vị trí Y (đỉnh của paddle)
         double gunY = paddleY;
 
-        // Tạo laser trái
         Laser laser1 = new Laser(leftGunX, gunY);
         lasers.add(laser1);
         getChildren().add(laser1);
 
-        // Tạo laser phải
         Laser laser2 = new Laser(rightGunX, gunY);
         lasers.add(laser2);
         getChildren().add(laser2);
     }
 
-    // (Hàm updatePowerups() giữ nguyên)
     private void updatePowerups() {
         Iterator<Powerup> it = powerups.iterator();
         while (it.hasNext()) {
@@ -307,7 +311,6 @@ public class GamePane extends Pane {
         }
     }
 
-    // (Hàm removeAndRespawnBall() giữ nguyên)
     private void removeAndRespawnBall() {
         for (Ball ball : balls) {
             getChildren().remove(ball);
@@ -316,16 +319,23 @@ public class GamePane extends Pane {
         spawnInitialBall();
     }
 
-    // (Hàm startNextLevel() cập nhật)
     private void startNextLevel() {
         level++;
 
-        // Xóa laser cũ (MỚI)
+        // Xóa laser cũ
         isLaserActive = false;
         for (Laser laser : lasers) {
             getChildren().remove(laser);
         }
         lasers.clear();
+
+        // (RESET POWERUP)
+        if (isDoublePaddleActive) {
+            paddle.setNormalLength();
+            isDoublePaddleActive = false;
+        }
+        isShieldActive = false;
+        shieldBar.setVisible(false); // NEW: Ẩn thanh chắn
 
         // 1. Xóa vật phẩm (Powerups) còn sót lại
         for (Powerup powerup : powerups) {
@@ -351,16 +361,12 @@ public class GamePane extends Pane {
         messageText.setVisible(true);
     }
 
-    /**
-     * (CẬP NHẬT LỚN) Xử lý tất cả va chạm, thêm logic Laser-Brick và Teleporter.
-     */
     private void checkCollisions(long now) {
         // --- 1. KIỂM TRA VÀ XỬ LÝ BALL-PADDLE VÀ BALL RƠI XUỐNG ---
         Iterator<Ball> ballIt = balls.iterator();
         while (ballIt.hasNext()) {
             Ball ball = ballIt.next();
 
-            // ... (Ball-Paddle collision logic giữ nguyên)
             if (ball.getBoundsInParent().intersects(paddle.getBoundsInParent())) {
 
                 if (ball.getDy() > 0) {
@@ -378,6 +384,19 @@ public class GamePane extends Pane {
 
             // (Va chạm Bóng với Đáy)
             if (ball.getLayoutY() >= screenHeight) {
+
+                // Xử lý Shield
+                if (isShieldActive) {
+                    isShieldActive = false;
+                    shieldBar.setVisible(false); // NEW: Ẩn thanh chắn khi được sử dụng
+
+                    ball.reverseDy();
+                    ball.setLayoutY(screenHeight - ball.getRadius() * 2 - 1);
+
+                    continue;
+                }
+
+                // Nếu không có Shield, mất bóng
                 getChildren().remove(ball);
                 ballIt.remove();
 
@@ -388,26 +407,24 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- 2. Xử lý CỔNG-BÓNG --- (Giữ lại logic Teleporter)
+        // --- 2. Xử lý CỔNG-BÓNG ---
         for (Ball ball : balls) {
             for (Teleporter teleporter : teleporters) {
-                // Kiểm tra va chạm và không trong thời gian cooldown
                 if (ball.getBoundsInParent().intersects(teleporter.getBoundsInParent()) && !teleporter.isOnCooldown(now)) {
 
                     teleporter.teleportBall(ball);
-                    // Dịch chuyển khỏi cổng, chuyển sang bóng tiếp theo
                     break;
                 }
             }
         }
 
-        // --- 3. XỬ LÝ VA CHẠM LASER-BRICK (MỚI) --- (Đánh số lại)
+        // --- 3. XỬ LÝ VA CHẠM LASER-BRICK ---
         List<Brick> bricksHitByLaser = new ArrayList<>();
         Iterator<Laser> laserIt = lasers.iterator();
 
         while (laserIt.hasNext()) {
             Laser laser = laserIt.next();
-            Iterator<Brick> brickIt = bricks.iterator(); // Loop over remaining bricks
+            Iterator<Brick> brickIt = bricks.iterator();
 
             while (brickIt.hasNext()) {
                 Brick brick = brickIt.next();
@@ -415,25 +432,24 @@ public class GamePane extends Pane {
 
                 if (laser.getBoundsInParent().intersects(brickView.getBoundsInParent())) {
 
-                    boolean wasDestroyed = brick.onHit(); // Gạch mất 1 máu
+                    boolean wasDestroyed = brick.onHit();
 
                     // Xóa Laser
                     getChildren().remove(laser);
                     laserIt.remove();
 
                     if (wasDestroyed) {
-                        // Lưu vào danh sách để xử lý nổ/xóa sau
                         bricksHitByLaser.add(brick);
                     }
 
                     scoreText.setText("Score: " + score);
-                    break; // Laser chỉ chạm một gạch
+                    break;
                 }
             }
         }
 
-        // --- 4. XỬ LÝ VA CHẠM BALL-BRICK --- (Đánh số lại)
-        if (balls.isEmpty() && bricksHitByLaser.isEmpty()) return; // Thoát nếu không có gì để va chạm
+        // --- 4. XỬ LÝ VA CHẠM BALL-BRICK ---
+        if (balls.isEmpty() && bricksHitByLaser.isEmpty()) return;
 
         List<Brick> bricksToExplode = new ArrayList<>();
 
@@ -483,8 +499,7 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- 5. XỬ LÝ GẠCH BỊ LASER PHÁ HỦY HOÀN TOÀN --- (Đánh số lại)
-        // Xử lý các gạch mà laser đã bắn vỡ (vì laser không tự xóa gạch khỏi list bricks)
+        // --- 5. XỬ LÝ GẠCH BỊ LASER PHÁ HỦY HOÀN TOÀN ---
         for (Brick brick : bricksHitByLaser) {
             if (bricks.contains(brick)) {
                 bricks.remove(brick);
@@ -502,7 +517,7 @@ public class GamePane extends Pane {
         }
 
 
-        // --- 6. Xử lý các vụ nổ (Explosion logic giữ nguyên) --- (Đánh số lại)
+        // --- 6. Xử lý các vụ nổ ---
         if (!bricksToExplode.isEmpty()) {
             for (Brick explosiveBrick : bricksToExplode) {
                 if (explosiveBrick instanceof Explosive_brick) {
@@ -512,13 +527,12 @@ public class GamePane extends Pane {
             scoreText.setText("Score: " + score);
         }
 
-        // --- 7. Kiểm tra chuyển cấp độ --- (Đánh số lại)
+        // --- 7. Kiểm tra chuyển cấp độ ---
         if (bricks.isEmpty()) {
             startNextLevel();
         }
     }
 
-    // (Hàm spawnPowerup() giữ nguyên)
     private void spawnPowerup(Powerup_brick brick) {
         double chance = rand.nextDouble();
 
@@ -534,9 +548,11 @@ public class GamePane extends Pane {
     }
 
     /**
-     * (CẬP NHẬT) Xử lý kích hoạt Powerup, thêm logic Laser.
+     * (CẬP NHẬT) Xử lý kích hoạt Powerup.
      */
     private void activatePowerup(PowerupType type) {
+        long now = System.nanoTime();
+
         if (type == PowerupType.MULTI_BALL) {
             System.out.println("KÍCH HOẠT MULTI-BALL!");
             spawnMultiBall();
@@ -544,16 +560,25 @@ public class GamePane extends Pane {
         else if (type == PowerupType.LASER_PADDLE) {
             System.out.println("KÍCH HOẠT LASER PADDLE! (4 giây)");
 
-            // Kích hoạt Laser
             isLaserActive = true;
-            // Thiết lập thời điểm kết thúc
-            laserEndTime = System.nanoTime() + LASER_DURATION_NANO;
-            // Đặt thời điểm bắn đầu tiên ngay lập tức
+            laserEndTime = now + LASER_DURATION_NANO;
             lastShotTime = 0;
+        }
+        else if (type == PowerupType.DOUBLE_PADDLE) {
+            System.out.println("KÍCH HOẠT DOUBLE PADDLE! (15 giây)");
+
+            paddle.setDoubleLength();
+            isDoublePaddleActive = true;
+
+            doublePaddleEndTime = now + DOUBLE_PADDLE_DURATION_NANO;
+        }
+        else if (type == PowerupType.SHIELD) {
+            System.out.println("KÍCH HOẠT SHIELD!");
+            isShieldActive = true;
+            shieldBar.setVisible(true); // NEW: Hiển thị thanh chắn
         }
     }
 
-    // (Hàm spawnMultiBall() giữ nguyên)
     private void spawnMultiBall() {
         if (balls.isEmpty()) return;
 
@@ -572,7 +597,6 @@ public class GamePane extends Pane {
     }
 
 
-    // (Hàm explode() giữ nguyên)
     private void explode(Explosive_brick sourceExplosiveBrick) {
         int explosionRadius = 3;
 
@@ -613,19 +637,28 @@ public class GamePane extends Pane {
 
 
     /**
-     * (CẬP NHẬT) Xử lý mất mạng, thêm dọn dẹp Laser.
+     * (CẬP NHẬT) Xử lý mất mạng, reset Powerup.
      */
     private void loseLife() {
         lives--;
         livesText.setText("x " + lives);
         gameRunning = false;
 
-        // Xóa laser cũ (MỚI)
+        // Xóa laser cũ
         isLaserActive = false;
         for (Laser laser : lasers) {
             getChildren().remove(laser);
         }
         lasers.clear();
+
+        // (RESET POWERUP)
+        if (isDoublePaddleActive) {
+            paddle.setNormalLength();
+            isDoublePaddleActive = false;
+        }
+        isShieldActive = false;
+        shieldBar.setVisible(false); // NEW: Ẩn thanh chắn
+
 
         removeAndRespawnBall();
 
@@ -642,7 +675,7 @@ public class GamePane extends Pane {
     }
 
     /**
-     * (CẬP NHẬT) Reset game, thêm dọn dẹp Laser.
+     * (CẬP NHẬT) Reset game, reset Powerup.
      */
     private void resetGame() {
         lives = 3;
@@ -652,12 +685,20 @@ public class GamePane extends Pane {
         level = 1;
         levelText.setText("Level: " + level);
 
-        // Xóa laser cũ (MỚI)
+        // Xóa laser cũ
         isLaserActive = false;
         for (Laser laser : lasers) {
             getChildren().remove(laser);
         }
         lasers.clear();
+
+        // (RESET POWERUP)
+        if (isDoublePaddleActive) {
+            paddle.setNormalLength();
+            isDoublePaddleActive = false;
+        }
+        isShieldActive = false;
+        shieldBar.setVisible(false); // NEW: Ẩn thanh chắn
 
         paddle.reset();
 
@@ -688,7 +729,6 @@ public class GamePane extends Pane {
         gameRunning = false;
     }
 
-    // (Hàm handleKeyPressed và handleKeyReleased giữ nguyên)
     public void handleKeyPressed(KeyCode code) {
         if (code == KeyCode.A || code == KeyCode.LEFT) goLeft = true;
         if (code == KeyCode.D || code == KeyCode.RIGHT) goRight = true;
