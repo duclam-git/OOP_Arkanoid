@@ -26,6 +26,12 @@ public class Powerup extends ImageView {
             case LASER_PADDLE:
                 imagePath = "/images/powerup_laser.png";
                 break;
+            case DOUBLE_PADDLE: // Xử lý Powerup mới
+                imagePath = "/images/doublePaddle.png";
+                break;
+            case SHIELD: // Xử lý Powerup mới
+                imagePath = "/images/Shield.png";
+                break;
         }
 
         Image img = new Image(getClass().getResourceAsStream(imagePath));
