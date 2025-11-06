@@ -11,9 +11,8 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-
-        // Tạo đối tượng GamePane (Nơi chứa toàn bộ game)
-        GamePane gamePane = new GamePane(SCREEN_WIDTH, SCREEN_HEIGHT);
+        
+        GamePane gamePane = GamePane.getInstance(SCREEN_WIDTH, SCREEN_HEIGHT);
 
         // Tạo Scene và đặt GamePane làm nội dung chính
         Scene scene = new Scene(gamePane, SCREEN_WIDTH, SCREEN_HEIGHT);
