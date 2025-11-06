@@ -61,7 +61,7 @@ public class Teleporter extends ImageView {
     }
 
     /**
-     * Dịch chuyển quả bóng đến vị trí thoát của cổng đối tác và thay đổi hướng.
+     * Dịch chuyển quả bóng đến vị trí thoát của cổng đối tác và thay đổi hướng ngẫu nhiên.
      * @param ball Quả bóng cần dịch chuyển
      */
     public void teleportBall(Ball ball) {
@@ -78,12 +78,15 @@ public class Teleporter extends ImageView {
         // Đặt cao hơn để đảm bảo thoát khỏi vùng va chạm và di chuyển lên
         ball.setLayoutY(exitY - ballRadius * 2);
 
-        // 2. Thay đổi hướng ngẫu nhiên để tránh bị mắc kẹt
-        // Đảm bảo tốc độ không đổi và hướng luôn bay lên
-        ball.setDirection(
-                Math.random() > 0.5 ? ballSpeed : -ballSpeed,
-                -ballSpeed
-        );
+        // 2. Thay đổi hướng ngẫu nhiên (phân tán)
+        // Tạo một giá trị ngẫu nhiên từ -ballSpeed đến +ballSpeed cho hướng ngang (scatteredDx)
+        double scatteredDx = (Math.random() * 2 * ballSpeed) - ballSpeed;
+
+        // Hướng dọc (newDy) luôn âm để đảm bảo bóng bay lên
+        double newDy = -ballSpeed;
+
+        // Hàm setDirection sẽ chuẩn hóa vector (scatteredDx, newDy) để giữ tốc độ không đổi
+        ball.setDirection(scatteredDx, newDy);
 
         // 3. Đặt cooldown cho cổng đối tác để tránh bóng ngay lập tức chạm lại
         partner.setExitCooldown();
