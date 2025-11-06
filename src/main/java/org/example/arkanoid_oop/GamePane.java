@@ -44,8 +44,8 @@ public class GamePane extends Pane {
     private List<Laser> lasers = new ArrayList<>(); // Danh sách quản lý các tia laser đang hoạt động
     private long laserEndTime = 0; // Thời điểm laser hết hạn (nanoTime)
     private long lastShotTime = 0; // Thời điểm bắn laser gần nhất (nanoTime)
-    private final long LASER_DURATION_NANO = 4_000_000_000L; // 5 giây (nano = 1 tỷ)
-    private final long SHOT_INTERVAL_NANO = 800_000_000L; // 0.5 giây
+    private final long LASER_DURATION_NANO = 4_000_000_000L; // 4 giây
+    private final long SHOT_INTERVAL_NANO = 800_000_000L; // 0.8 giây (0.5 giây trong code gốc, điều chỉnh lại theo giá trị đã định nghĩa)
 
     // Trạng thái input
     private boolean goLeft = false;
@@ -90,7 +90,7 @@ public class GamePane extends Pane {
             getChildren().add(brick.getView());
         }
 
-        createTeleporters();
+        createTeleporters(); // Giữ lại hàm tạo Teleporter
 
         // Khởi tạo giao diện
         createHUD();
@@ -151,14 +151,14 @@ public class GamePane extends Pane {
     }
 
     /**
-     * Hàm createTeleporters()
+     * Hàm createTeleporters() (Đã giải quyết xung đột, giữ lại phiên bản thêm Teleporter)
      */
     private void createTeleporters() {
-        // Vị trí cốcho cổng 1
+        // Vị trí cố định cho cổng 1
         double teleporter1X = 100;
         double teleporter1Y = 400;
 
-        // Vị trícho cổng 2
+        // Vị trí cho cổng 2
         double teleporter2X = screenWidth - 100;
         double teleporter2Y = 400;
 
@@ -218,7 +218,7 @@ public class GamePane extends Pane {
             for (Ball ball : balls) {
                 ball.update();
             }
-            checkCollisions();
+            checkCollisions(now); // Truyền thời gian hiện tại
         } else {
             if (!balls.isEmpty()) {
                 Ball ball = balls.get(0);
@@ -352,11 +352,9 @@ public class GamePane extends Pane {
     }
 
     /**
-     * (CẬP NHẬT LỚN) Xử lý tất cả va chạm, thêm logic Laser-Brick.
+     * (CẬP NHẬT LỚN) Xử lý tất cả va chạm, thêm logic Laser-Brick và Teleporter.
      */
-    private void checkCollisions() {
-        long now = System.nanoTime();
-
+    private void checkCollisions(long now) {
         // --- 1. KIỂM TRA VÀ XỬ LÝ BALL-PADDLE VÀ BALL RƠI XUỐNG ---
         Iterator<Ball> ballIt = balls.iterator();
         while (ballIt.hasNext()) {
@@ -390,7 +388,7 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- 2. Xử lý CỔNG-BÓNG ---
+        // --- 2. Xử lý CỔNG-BÓNG --- (Giữ lại logic Teleporter)
         for (Ball ball : balls) {
             for (Teleporter teleporter : teleporters) {
                 // Kiểm tra va chạm và không trong thời gian cooldown
@@ -403,7 +401,7 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- 3. XỬ LÝ VA CHẠM LASER-BRICK (MỚI) ---
+        // --- 3. XỬ LÝ VA CHẠM LASER-BRICK (MỚI) --- (Đánh số lại)
         List<Brick> bricksHitByLaser = new ArrayList<>();
         Iterator<Laser> laserIt = lasers.iterator();
 
@@ -434,7 +432,7 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- 4. XỬ LÝ VA CHẠM BALL-BRICK ---
+        // --- 4. XỬ LÝ VA CHẠM BALL-BRICK --- (Đánh số lại)
         if (balls.isEmpty() && bricksHitByLaser.isEmpty()) return; // Thoát nếu không có gì để va chạm
 
         List<Brick> bricksToExplode = new ArrayList<>();
@@ -485,7 +483,7 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- 5. XỬ LÝ GẠCH BỊ LASER PHÁ HỦY HOÀN TOÀN ---
+        // --- 5. XỬ LÝ GẠCH BỊ LASER PHÁ HỦY HOÀN TOÀN --- (Đánh số lại)
         // Xử lý các gạch mà laser đã bắn vỡ (vì laser không tự xóa gạch khỏi list bricks)
         for (Brick brick : bricksHitByLaser) {
             if (bricks.contains(brick)) {
@@ -504,7 +502,7 @@ public class GamePane extends Pane {
         }
 
 
-        // --- 6. Xử lý các vụ nổ (Explosion logic giữ nguyên) ---
+        // --- 6. Xử lý các vụ nổ (Explosion logic giữ nguyên) --- (Đánh số lại)
         if (!bricksToExplode.isEmpty()) {
             for (Brick explosiveBrick : bricksToExplode) {
                 if (explosiveBrick instanceof Explosive_brick) {
@@ -514,7 +512,7 @@ public class GamePane extends Pane {
             scoreText.setText("Score: " + score);
         }
 
-        // --- 7. Kiểm tra chuyển cấp độ ---
+        // --- 7. Kiểm tra chuyển cấp độ --- (Đánh số lại)
         if (bricks.isEmpty()) {
             startNextLevel();
         }
@@ -544,7 +542,7 @@ public class GamePane extends Pane {
             spawnMultiBall();
         }
         else if (type == PowerupType.LASER_PADDLE) {
-            System.out.println("KÍCH HOẠT LASER PADDLE! (5 giây)");
+            System.out.println("KÍCH HOẠT LASER PADDLE! (4 giây)");
 
             // Kích hoạt Laser
             isLaserActive = true;
