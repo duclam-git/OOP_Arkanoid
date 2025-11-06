@@ -37,6 +37,7 @@ public class GamePane extends Pane {
     private List<Ball> balls = new ArrayList<>();
     private List<Brick> bricks = new ArrayList<>();
     private List<Powerup> powerups = new ArrayList<>();
+    private List<Teleporter> teleporters = new ArrayList<>();
 
     // (MỚI CHO LASER)
     private boolean isLaserActive = false;
@@ -88,6 +89,8 @@ public class GamePane extends Pane {
         for (Brick brick : bricks) {
             getChildren().add(brick.getView());
         }
+
+        createTeleporters();
 
         // Khởi tạo giao diện
         createHUD();
@@ -145,6 +148,31 @@ public class GamePane extends Pane {
                 bricks.add(brick);
             }
         }
+    }
+
+    /**
+     * Hàm createTeleporters()
+     */
+    private void createTeleporters() {
+        // Vị trí cốcho cổng 1
+        double teleporter1X = 100;
+        double teleporter1Y = 400;
+
+        // Vị trícho cổng 2
+        double teleporter2X = screenWidth - 100;
+        double teleporter2Y = 400;
+
+        Teleporter teleporter1 = new Teleporter(teleporter1X, teleporter1Y);
+        Teleporter teleporter2 = new Teleporter(teleporter2X, teleporter2Y);
+
+        // Thiết lập liên kết
+        teleporter1.setPartner(teleporter2);
+        teleporter2.setPartner(teleporter1);
+
+        // Thêm vào danh sách và Pane
+        teleporters.add(teleporter1);
+        teleporters.add(teleporter2);
+        getChildren().addAll(teleporter1, teleporter2);
     }
 
     // (Hàm createHUD() giữ nguyên)
@@ -327,6 +355,7 @@ public class GamePane extends Pane {
      * (CẬP NHẬT LỚN) Xử lý tất cả va chạm, thêm logic Laser-Brick.
      */
     private void checkCollisions() {
+        long now = System.nanoTime();
 
         // --- 1. KIỂM TRA VÀ XỬ LÝ BALL-PADDLE VÀ BALL RƠI XUỐNG ---
         Iterator<Ball> ballIt = balls.iterator();
@@ -361,7 +390,20 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- 2. XỬ LÝ VA CHẠM LASER-BRICK (MỚI) ---
+        // --- 2. Xử lý CỔNG-BÓNG ---
+        for (Ball ball : balls) {
+            for (Teleporter teleporter : teleporters) {
+                // Kiểm tra va chạm và không trong thời gian cooldown
+                if (ball.getBoundsInParent().intersects(teleporter.getBoundsInParent()) && !teleporter.isOnCooldown(now)) {
+
+                    teleporter.teleportBall(ball);
+                    // Dịch chuyển khỏi cổng, chuyển sang bóng tiếp theo
+                    break;
+                }
+            }
+        }
+
+        // --- 3. XỬ LÝ VA CHẠM LASER-BRICK (MỚI) ---
         List<Brick> bricksHitByLaser = new ArrayList<>();
         Iterator<Laser> laserIt = lasers.iterator();
 
@@ -392,7 +434,7 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- 3. XỬ LÝ VA CHẠM BALL-BRICK ---
+        // --- 4. XỬ LÝ VA CHẠM BALL-BRICK ---
         if (balls.isEmpty() && bricksHitByLaser.isEmpty()) return; // Thoát nếu không có gì để va chạm
 
         List<Brick> bricksToExplode = new ArrayList<>();
@@ -443,7 +485,7 @@ public class GamePane extends Pane {
             }
         }
 
-        // --- 4. XỬ LÝ GẠCH BỊ LASER PHÁ HỦY HOÀN TOÀN ---
+        // --- 5. XỬ LÝ GẠCH BỊ LASER PHÁ HỦY HOÀN TOÀN ---
         // Xử lý các gạch mà laser đã bắn vỡ (vì laser không tự xóa gạch khỏi list bricks)
         for (Brick brick : bricksHitByLaser) {
             if (bricks.contains(brick)) {
@@ -462,7 +504,7 @@ public class GamePane extends Pane {
         }
 
 
-        // --- 5. Xử lý các vụ nổ (Explosion logic giữ nguyên) ---
+        // --- 6. Xử lý các vụ nổ (Explosion logic giữ nguyên) ---
         if (!bricksToExplode.isEmpty()) {
             for (Brick explosiveBrick : bricksToExplode) {
                 if (explosiveBrick instanceof Explosive_brick) {
@@ -472,7 +514,7 @@ public class GamePane extends Pane {
             scoreText.setText("Score: " + score);
         }
 
-        // --- 6. Kiểm tra chuyển cấp độ ---
+        // --- 7. Kiểm tra chuyển cấp độ ---
         if (bricks.isEmpty()) {
             startNextLevel();
         }
