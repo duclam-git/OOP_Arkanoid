@@ -28,6 +28,10 @@ import static org.example.arkanoid_oop.Brick.Brick.BRICK_WIDTH;
  */
 public class GamePane extends Pane {
 
+    // --- SINGLETON IMPLEMENTATION ---
+    private static GamePane instance;
+    // --------------------------------
+
     private double screenWidth;
     private double screenHeight;
 
@@ -50,11 +54,11 @@ public class GamePane extends Pane {
     // (DOUBLE PADDLE)
     private boolean isDoublePaddleActive = false;
     private long doublePaddleEndTime = 0;
-    private final long DOUBLE_PADDLE_DURATION_NANO = 10_000_000_000L;
+    private final long DOUBLE_PADDLE_DURATION_NANO = 15_000_000_000L; // Giữ lại 15 giây
 
     // (SHIELD)
     private boolean isShieldActive = false;
-    private Rectangle shieldBar; // NEW: Đối tượng hiển thị thanh chắn
+    private Rectangle shieldBar;
 
     // Trạng thái input
     private boolean goLeft = false;
@@ -78,7 +82,8 @@ public class GamePane extends Pane {
 
     private AnimationTimer gameLoop;
 
-    public GamePane(double width, double height) {
+    // --- THAY ĐỔI: Chuyển constructor thành private ---
+    private GamePane(double width, double height) {
         this.screenWidth = width;
         this.screenHeight = height;
 
@@ -103,7 +108,7 @@ public class GamePane extends Pane {
 
         // Khởi tạo giao diện
         createHUD();
-        createShieldBar(); // NEW: Khởi tạo Shield Bar
+        createShieldBar();
 
         // Bắt đầu vòng lặp game
         gameLoop = new AnimationTimer() {
@@ -698,7 +703,7 @@ public class GamePane extends Pane {
             isDoublePaddleActive = false;
         }
         isShieldActive = false;
-        shieldBar.setVisible(false); // NEW: Ẩn thanh chắn
+        shieldBar.setVisible(false);
 
         paddle.reset();
 
