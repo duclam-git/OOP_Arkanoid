@@ -54,7 +54,7 @@ public class GamePane extends Pane {
     // (DOUBLE PADDLE)
     private boolean isDoublePaddleActive = false;
     private long doublePaddleEndTime = 0;
-    private final long DOUBLE_PADDLE_DURATION_NANO = 15_000_000_000L;
+    private final long DOUBLE_PADDLE_DURATION_NANO = 10_000_000_000L; // Giữ lại 15 giây
 
     // (SHIELD)
     private boolean isShieldActive = false;
@@ -128,9 +128,9 @@ public class GamePane extends Pane {
         return instance;
     }
 
-    // (Các hàm private và logic game còn lại giữ nguyên)
     private void createShieldBar() {
         double barHeight = 5;
+        // Tạo Rectangle bao phủ toàn bộ chiều rộng, dày 5px, nằm ngay trên đáy map
         shieldBar = new Rectangle(0, screenHeight - barHeight, screenWidth, barHeight);
         shieldBar.setFill(Color.AQUA);
         shieldBar.setOpacity(0.7);
