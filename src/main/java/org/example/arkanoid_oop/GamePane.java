@@ -54,7 +54,7 @@ public class GamePane extends Pane {
     // (DOUBLE PADDLE)
     private boolean isDoublePaddleActive = false;
     private long doublePaddleEndTime = 0;
-    private final long DOUBLE_PADDLE_DURATION_NANO = 10_000_000_000L; // Giữ lại 15 giây
+    private final long DOUBLE_PADDLE_DURATION_NANO = 15_000_000_000L; // Giữ lại 15 giây
 
     // (SHIELD)
     private boolean isShieldActive = false;
