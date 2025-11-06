@@ -14,10 +14,14 @@ import javafx.scene.image.ImageView;
 import org.example.arkanoid_oop.Brick.*;
 import org.example.arkanoid_oop.Entities.*;
 
+import java.io.File; // THÊM
+import java.io.FileNotFoundException; // THÊM
+import java.io.PrintWriter; // THÊM
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner; // THÊM
 
 import static org.example.arkanoid_oop.Brick.Brick.BRICK_HEIGHT;
 import static org.example.arkanoid_oop.Brick.Brick.BRICK_WIDTH;
@@ -27,6 +31,9 @@ import static org.example.arkanoid_oop.Brick.Brick.BRICK_WIDTH;
  * và quản lý vòng lặp (game loop) chính.
  */
 public class GamePane extends Pane {
+
+    // THÊM: Tên file lưu High Score
+    private static final String HIGH_SCORE_FILE = "highscore.txt";
 
     // --- SINGLETON IMPLEMENTATION ---
     private static GamePane instance;
@@ -69,6 +76,7 @@ public class GamePane extends Pane {
     private int lives = 3;
     private int score = 0;
     private int level = 1;
+    private int highscore = 0; // THÊM: Biến lưu High Score
 
     // Thêm một đối tượng Random
     private Random rand = new Random();
@@ -79,6 +87,7 @@ public class GamePane extends Pane {
     private Text scoreText;
     private Text messageText;
     private Text levelText;
+    private Text highscoreText; // THÊM: Đối tượng hiển thị High Score
 
     private AnimationTimer gameLoop;
 
@@ -88,6 +97,8 @@ public class GamePane extends Pane {
         this.screenHeight = height;
 
         setPrefSize(screenWidth, screenHeight);
+
+        loadHighScore(); // GỌI HÀM LOAD HIGH SCORE KHI KHỞI ĐỘNG
 
         // Khởi tạo các đối tượng game
         background = new Background(screenWidth, screenHeight);
@@ -213,18 +224,26 @@ public class GamePane extends Pane {
         scoreText.setFont(Font.font("Arial", 20)); scoreText.setFill(Color.WHITE);
         scoreText.setLayoutX(screenWidth - 120); scoreText.setLayoutY(30);
 
+        // ĐIỀU CHỈNH VỊ TRÍ LEVEL VÀ THÊM HIGH SCORE
         levelText = new Text("Level: " + level);
         levelText.setFont(Font.font("Arial", 20)); levelText.setFill(Color.WHITE);
-        double levelTextWidth = 100;
-        levelText.setLayoutX((screenWidth - levelTextWidth) / 2);
+        // Đặt Level sang trái giữa
+        levelText.setLayoutX(screenWidth / 2 - 120);
         levelText.setLayoutY(30);
+
+        highscoreText = new Text("High Score: " + highscore); // KHỞI TẠO HIGH SCORE DÙNG GIÁ TRỊ ĐÃ LOAD
+        highscoreText.setFont(Font.font("Arial", 20)); highscoreText.setFill(Color.WHITE);
+        // Đặt High Score sang phải giữa
+        highscoreText.setLayoutX(screenWidth / 2 + 20);
+        highscoreText.setLayoutY(30);
 
         messageText = new Text("Press SPACE to Start");
         messageText.setFont(Font.font("Arial", 30)); messageText.setFill(Color.WHITE);
         messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
         messageText.setLayoutY(screenHeight / 2);
 
-        getChildren().addAll(heartIcon, livesText, scoreText, messageText, levelText);
+        // THÊM highscoreText VÀO PANE
+        getChildren().addAll(heartIcon, livesText, scoreText, messageText, levelText, highscoreText);
     }
 
     /**
@@ -649,7 +668,7 @@ public class GamePane extends Pane {
 
 
     /**
-     * (CẬP NHẬT) Xử lý mất mạng, reset Powerup.
+     * (CẬP NHẬT) Xử lý mất mạng, reset Powerup và kiểm tra High Score.
      */
     private void loseLife() {
         lives--;
@@ -673,7 +692,17 @@ public class GamePane extends Pane {
 
         removeAndRespawnBall();
 
+        // DỜI LOGIC HIGH SCORE XUỐNG DƯỚI
+
         if (lives <= 0) {
+
+            // CHỈ KIỂM TRA VÀ LƯU KHI THUA HẲN
+            if (score > highscore) {
+                highscore = score;
+                highscoreText.setText("High Score: " + highscore);
+                saveHighScore(); // GỌI HÀM LƯU HIGH SCORE
+            }
+
             messageText.setText("GAME OVER! Press R to Restart");
             messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
             messageText.setVisible(true);
@@ -739,6 +768,43 @@ public class GamePane extends Pane {
 
         gameRunning = false;
     }
+
+    /**
+     * (MỚI) Đọc High Score từ file.
+     */
+    private void loadHighScore() {
+        try {
+            File file = new File(HIGH_SCORE_FILE);
+            if (file.exists()) {
+                Scanner scanner = new Scanner(file);
+                if (scanner.hasNextInt()) {
+                    this.highscore = scanner.nextInt();
+                }
+                scanner.close();
+            }
+        } catch (FileNotFoundException e) {
+            // Đây là lỗi bình thường khi chạy lần đầu, không cần in lỗi quá nghiêm trọng
+            System.out.println("Chưa tìm thấy file highscore.txt, khởi tạo High Score = 0.");
+        } catch (Exception e) {
+            System.out.println("Lỗi: Không thể tải highscore.");
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * (MỚI) Lưu High Score vào file.
+     */
+    private void saveHighScore() {
+        try {
+            PrintWriter writer = new PrintWriter(HIGH_SCORE_FILE);
+            writer.print(this.highscore);
+            writer.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("Lỗi: Không thể lưu highscore.");
+            e.printStackTrace();
+        }
+    }
+
 
     public void handleKeyPressed(KeyCode code) {
         if (code == KeyCode.A || code == KeyCode.LEFT) goLeft = true;
