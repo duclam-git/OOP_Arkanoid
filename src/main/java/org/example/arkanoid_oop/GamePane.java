@@ -6,7 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Rectangle; // Import cần thiết cho Rectangle
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.image.Image;
@@ -120,21 +120,14 @@ public class GamePane extends Pane {
         gameLoop.start();
     }
 
-    // --- THÊM: Phương thức truy cập tĩnh (Static Factory Method) ---
-    public static GamePane getInstance(double width, double height) {
-        if (instance == null) {
-            instance = new GamePane(width, height);
-        }
-        return instance;
-    }
-
+    // NEW: Hàm tạo thanh chắn (Shield Bar)
     private void createShieldBar() {
         double barHeight = 5;
         // Tạo Rectangle bao phủ toàn bộ chiều rộng, dày 5px, nằm ngay trên đáy map
         shieldBar = new Rectangle(0, screenHeight - barHeight, screenWidth, barHeight);
-        shieldBar.setFill(Color.AQUA);
-        shieldBar.setOpacity(0.7);
-        shieldBar.setVisible(false);
+        shieldBar.setFill(Color.AQUA); // Màu xanh dương để dễ nhận biết
+        shieldBar.setOpacity(0.7); // Hơi trong suốt
+        shieldBar.setVisible(false); // Ẩn ban đầu
 
         getChildren().add(shieldBar);
     }
@@ -347,7 +340,7 @@ public class GamePane extends Pane {
             isDoublePaddleActive = false;
         }
         isShieldActive = false;
-        shieldBar.setVisible(false);
+        shieldBar.setVisible(false); // NEW: Ẩn thanh chắn
 
         // 1. Xóa vật phẩm (Powerups) còn sót lại
         for (Powerup powerup : powerups) {
@@ -400,7 +393,7 @@ public class GamePane extends Pane {
                 // Xử lý Shield
                 if (isShieldActive) {
                     isShieldActive = false;
-                    shieldBar.setVisible(false);
+                    shieldBar.setVisible(false); // NEW: Ẩn thanh chắn khi được sử dụng
 
                     ball.reverseDy();
                     ball.setLayoutY(screenHeight - ball.getRadius() * 2 - 1);
@@ -587,7 +580,7 @@ public class GamePane extends Pane {
         else if (type == PowerupType.SHIELD) {
             System.out.println("KÍCH HOẠT SHIELD!");
             isShieldActive = true;
-            shieldBar.setVisible(true);
+            shieldBar.setVisible(true); // NEW: Hiển thị thanh chắn
         }
     }
 
@@ -669,7 +662,8 @@ public class GamePane extends Pane {
             isDoublePaddleActive = false;
         }
         isShieldActive = false;
-        shieldBar.setVisible(false);
+        shieldBar.setVisible(false); // NEW: Ẩn thanh chắn
+
 
         removeAndRespawnBall();
 
