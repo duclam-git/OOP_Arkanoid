@@ -12,9 +12,9 @@ import javafx.util.Duration;
  */
 public class Ball extends ImageView {
 
-    private static final double BALL_RADIUS = 10; // Kích thước bán kính hiển thị
+    public static final double BALL_RADIUS = 10; // Kích thước bán kính hiển thị
     // (MỚI) Hằng số tốc độ
-    private static final double BALL_SPEED = 2.5;
+    public static final double BALL_SPEED = 2.5;
 
     // Tốc độ và hướng di chuyển
     private double dx;

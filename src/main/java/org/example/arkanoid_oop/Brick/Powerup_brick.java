@@ -25,11 +25,16 @@ public class Powerup_brick extends Brick {
 
         this.scoreValue = 30; // Gạch này giá trị cao
 
-        // (MỚI) Chọn ngẫu nhiên loại vật phẩm gạch này sẽ chứa
-        if (rand.nextBoolean()) {
+        // (CẬP NHẬT) Chọn ngẫu nhiên loại vật phẩm trong 4 loại
+        int chance = rand.nextInt(4); // 0, 1, 2, hoặc 3
+        if (chance == 0) {
             this.powerupType = PowerupType.MULTI_BALL;
-        } else {
+        } else if (chance == 1) {
             this.powerupType = PowerupType.LASER_PADDLE;
+        } else if (chance == 2) {
+            this.powerupType = PowerupType.DOUBLE_PADDLE;
+        } else {
+            this.powerupType = PowerupType.SHIELD;
         }
     }
 

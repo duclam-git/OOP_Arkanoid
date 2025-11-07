@@ -5,5 +5,7 @@ package org.example.arkanoid_oop;
  */
 public enum PowerupType {
     MULTI_BALL,
-    LASER_PADDLE
+    LASER_PADDLE,
+    DOUBLE_PADDLE,
+    SHIELD
 }
