@@ -91,12 +91,16 @@ public class GamePane extends Pane {
 
     private AnimationTimer gameLoop;
 
+    private AudioManager audio; // Thêm trường AudioManager
+
     // --- THAY ĐỔI: Chuyển constructor thành private ---
     private GamePane(double width, double height) {
         this.screenWidth = width;
         this.screenHeight = height;
 
         setPrefSize(screenWidth, screenHeight);
+
+        audio = AudioManager.getInstance();
 
         loadHighScore(); // GỌI HÀM LOAD HIGH SCORE KHI KHỞI ĐỘNG
 
@@ -289,6 +293,7 @@ public class GamePane extends Pane {
         // --- 2. XỬ LÝ BẮN LASER ---
         if (isLaserActive && now > lastShotTime + SHOT_INTERVAL_NANO) {
             shootLasers();
+            audio.play("laser");
             lastShotTime = now;
         }
 
@@ -424,6 +429,8 @@ public class GamePane extends Pane {
                     ball.reverseDy();
                     ball.setLayoutY(screenHeight - ball.getRadius() * 2 - 1);
 
+                    audio.play("lose");
+
                     continue;
                 }
 
@@ -432,6 +439,7 @@ public class GamePane extends Pane {
                 ballIt.remove();
 
                 if (balls.isEmpty()) {
+                    audio.play("lose");
                     loseLife();
                     return;
                 }
@@ -464,7 +472,7 @@ public class GamePane extends Pane {
                 if (laser.getBoundsInParent().intersects(brickView.getBoundsInParent())) {
 
                     boolean wasDestroyed = brick.onHit();
-
+                    audio.play("brick");
                     // Xóa Laser
                     getChildren().remove(laser);
                     laserIt.remove();
@@ -504,6 +512,8 @@ public class GamePane extends Pane {
 
                     boolean wasDestroyed = brick.onHit();
 
+                    audio.play("brick");
+
                     if (overlapWidth < overlapHeight) {
                         ball.reverseDx();
                     } else {
@@ -521,8 +531,10 @@ public class GamePane extends Pane {
 
                         if (brick instanceof Powerup_brick) {
                             spawnPowerup((Powerup_brick) brick);
+                            audio.play("powerup_spawn");
                         }
                     }
+
 
                     scoreText.setText("Score: " + score);
                     break;
@@ -552,6 +564,7 @@ public class GamePane extends Pane {
         if (!bricksToExplode.isEmpty()) {
             for (Brick explosiveBrick : bricksToExplode) {
                 if (explosiveBrick instanceof Explosive_brick) {
+                    audio.play("explosion");
                     explode((Explosive_brick) explosiveBrick);
                 }
             }
@@ -560,6 +573,7 @@ public class GamePane extends Pane {
 
         // --- 7. Kiểm tra chuyển cấp độ ---
         if (bricks.isEmpty()) {
+            audio.play("level_complete");
             startNextLevel();
         }
     }
