@@ -11,6 +11,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.stage.Stage;
 import org.example.arkanoid_oop.Brick.*;
 import org.example.arkanoid_oop.Entities.*;
 
@@ -38,6 +39,8 @@ public class GamePane extends Pane {
     // --- SINGLETON IMPLEMENTATION ---
     private static GamePane instance;
     // --------------------------------
+
+    private Stage stage;
 
     private double screenWidth;
     private double screenHeight;
@@ -94,9 +97,10 @@ public class GamePane extends Pane {
     private AudioManager audio; // Thêm trường AudioManager
 
     // --- THAY ĐỔI: Chuyển constructor thành private ---
-    private GamePane(double width, double height) {
+    private GamePane(double width, double height, Stage stage) {
         this.screenWidth = width;
         this.screenHeight = height;
+        this.stage = stage;
 
         setPrefSize(screenWidth, screenHeight);
 
@@ -136,9 +140,9 @@ public class GamePane extends Pane {
     }
 
     // --- THÊM: Phương thức truy cập tĩnh (Static Factory Method) ---
-    public static GamePane getInstance(double width, double height) {
+    public static GamePane getInstance(double width, double height, Stage stage) {
         if (instance == null) {
-            instance = new GamePane(width, height);
+            instance = new GamePane(width, height, stage);
         }
         return instance;
     }
@@ -342,6 +346,7 @@ public class GamePane extends Pane {
             if (paddle.getBoundsInParent().intersects(powerup.getBoundsInParent())) {
                 activatePowerup(powerup.getType());
                 getChildren().remove(powerup);
+                audio.play("powerup");
                 it.remove();
             }
         }
@@ -405,6 +410,8 @@ public class GamePane extends Pane {
 
             if (ball.getBoundsInParent().intersects(paddle.getBoundsInParent())) {
 
+                audio.play("hit");
+
                 if (ball.getDy() > 0) {
                     Bounds ballBounds = ball.getBoundsInParent();
                     Bounds paddleBounds = paddle.getBoundsInParent();
@@ -429,7 +436,7 @@ public class GamePane extends Pane {
                     ball.reverseDy();
                     ball.setLayoutY(screenHeight - ball.getRadius() * 2 - 1);
 
-                    audio.play("lose");
+                    audio.play("hit");
 
                     continue;
                 }
@@ -452,6 +459,7 @@ public class GamePane extends Pane {
                 if (ball.getBoundsInParent().intersects(teleporter.getBoundsInParent()) && !teleporter.isOnCooldown(now)) {
 
                     teleporter.teleportBall(ball);
+                    audio.play("tele");
                     break;
                 }
             }
@@ -716,10 +724,21 @@ public class GamePane extends Pane {
                 highscoreText.setText("High Score: " + highscore);
                 saveHighScore(); // GỌI HÀM LƯU HIGH SCORE
             }
+            audio.stopGameMusic();
+            audio.play("game_over");
 
-            messageText.setText("GAME OVER! Press R to Restart");
+            messageText.setText("GAME OVER! Returning to Menu...");
             messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
             messageText.setVisible(true);
+
+            // Hẹn 3 giây sau quay về menu
+            javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(3));
+            delay.setOnFinished(e -> {
+                MainMenu menu = new MainMenu(stage);
+                menu.show();
+            });
+            delay.play();
+
         } else {
             messageText.setText("Press SPACE to Continue");
             messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);

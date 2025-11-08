@@ -6,11 +6,19 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 
-    private static final int SCREEN_WIDTH = 800;
-    private static final int SCREEN_HEIGHT = 600;
+
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage stage) {
+        // Tạo menu chính
+        MainMenu menu = new MainMenu(stage);
+        menu.show();
+    }
+
+    /*
+     @Override
+     public void start(Stage primaryStage) {
+
 
         GamePane gamePane = GamePane.getInstance(SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -30,6 +38,8 @@ public class Main extends Application {
         // Yêu cầu GamePane "focus" để nó có thể nhận sự kiện phím
         gamePane.requestFocus();
     }
+
+     */
 
     // Hàm main để khởi chạy ứng dụng
     public static void main(String[] args) {
