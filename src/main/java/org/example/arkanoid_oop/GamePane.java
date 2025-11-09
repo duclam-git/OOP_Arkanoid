@@ -243,12 +243,29 @@ public class GamePane extends Pane {
     }
 
     private void createTeleporters() {
-        double teleporter1X = 100;
-        double teleporter1Y = 400;
+        // Xóa các Teleporter cũ
+        for (Teleporter teleporter : teleporters) {
+            getChildren().remove(teleporter);
+        }
+        teleporters.clear();
 
-        double teleporter2X = screenWidth - 100;
-        double teleporter2Y = 400;
+        // Xác định vùng an toàn
+        // Vùng an toàn:
+        // X: 50 -> screenWidth - 50 (Tránh cạnh màn hình)
+        // Y: 250 -> screenHeight - 100;
+        double minX = 50;
+        double maxX = screenWidth - 50;
+        double minY = 250;
+        double maxY = screenHeight - 100;
 
+        // Tạo vị trí ngẫu nhiên cho 2 cổng
+        double teleporter1X = generateRandom(minX, maxX / 2);
+        double teleporter1Y = generateRandom(minY, maxY);
+
+        double teleporter2X = generateRandom(maxX / 2, maxX);
+        double teleporter2Y = generateRandom(minY, maxY);
+
+        // Khởi tạo và liên kết
         Teleporter teleporter1 = new Teleporter(teleporter1X, teleporter1Y);
         Teleporter teleporter2 = new Teleporter(teleporter2X, teleporter2Y);
 
@@ -572,6 +589,9 @@ public class GamePane extends Pane {
             getChildren().add(brick.getView());
         }
 
+        // 4. Tạo teleporter mới
+        createTeleporters();
+
         // 4. Cập nhật HUD
         levelText.setText("Level: " + level);
         messageText.setText("LEVEL CLEARED! Press SPACE to continue.");
@@ -766,7 +786,7 @@ public class GamePane extends Pane {
     private void spawnPowerup(Powerup_brick brick) {
         double chance = rand.nextDouble();
 
-        if (chance <= 0.25) {
+        if (chance <= 0.5) {
             PowerupType type = brick.getPowerupType();
             double x = brick.getCenterX();
             double y = brick.getCenterY();
@@ -900,6 +920,16 @@ public class GamePane extends Pane {
             messageText.setVisible(true);
             // Bỏ paddle.reset() cũ
         }
+    }
+
+    /**
+     * Trả giá trị random từ min đến mã
+     * @param min min
+     * @param max mã
+     * @return Số random
+     */
+    private double generateRandom(double min, double max) {
+        return min + (rand.nextDouble() * (max - min));
     }
 
     /**
