@@ -2,9 +2,12 @@ package org.example.arkanoid_oop;
 
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Bounds;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -15,14 +18,14 @@ import javafx.stage.Stage;
 import org.example.arkanoid_oop.Brick.*;
 import org.example.arkanoid_oop.Entities.*;
 
-import java.io.File; // THÊM
-import java.io.FileNotFoundException; // THÊM
-import java.io.PrintWriter; // THÊM
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.Scanner; // THÊM
+import java.util.Scanner;
 
 import static org.example.arkanoid_oop.Brick.Brick.BRICK_HEIGHT;
 import static org.example.arkanoid_oop.Brick.Brick.BRICK_WIDTH;
@@ -96,6 +99,10 @@ public class GamePane extends Pane {
 
     private AudioManager audio; // Thêm trường AudioManager
 
+    // *** KHAI BÁO BIẾN MỚI ***
+    private VBox gameOverOverlay;
+    private Rectangle backdrop; // Backdrop làm tối màn hình
+
     // --- THAY ĐỔI: Chuyển constructor thành private ---
     private GamePane(double width, double height, Stage stage) {
         this.screenWidth = width;
@@ -129,15 +136,41 @@ public class GamePane extends Pane {
         createHUD();
         createShieldBar();
 
+        // KHỞI TẠO OVERLAY GAME OVER (ẨN BAN ĐẦU)
+        createGameOverOverlay();
+
         // Bắt đầu vòng lặp game
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                updateGame(now);
+                // CẬP NHẬT PADDLE LUÔN LUÔN CHẠY
+                paddle.update(goLeft, goRight);
+
+                if (gameRunning) {
+                    updateGame(now);
+                } else {
+                    // Logic Ball dính Paddle
+                    updateBallStuckToPaddle();
+                }
             }
         };
         gameLoop.start();
     }
+
+    // *** PHƯƠNG THỨC MỚI: Cập nhật bóng dính vào Paddle khi game chưa chạy ***
+    private void updateBallStuckToPaddle() {
+        if (!balls.isEmpty()) {
+            Ball ball = balls.get(0);
+
+            // LẤY VỊ TRÍ MỚI CỦA PADDLE VÀ ĐẶT VỊ TRÍ BÓNG
+            double newBallX = paddle.getLayoutX() + (paddle.getBoundsInLocal().getWidth() / 2) - ball.getRadius();
+            double newBallY = paddle.getLayoutY() - 15 - (ball.getRadius() * 2);
+
+            ball.setLayoutX(newBallX);
+            ball.setLayoutY(newBallY);
+        }
+    }
+
 
     // --- THÊM: Phương thức truy cập tĩnh (Static Factory Method) ---
     public static GamePane getInstance(double width, double height, Stage stage) {
@@ -145,6 +178,14 @@ public class GamePane extends Pane {
             instance = new GamePane(width, height, stage);
         }
         return instance;
+    }
+
+    // *** PHƯƠNG THỨC MỚI: Reset Instance ***
+    public static void resetInstance() {
+        if (instance != null && instance.gameLoop != null) {
+            instance.gameLoop.stop(); // Dừng vòng lặp cũ
+        }
+        instance = null;
     }
 
     private void createShieldBar() {
@@ -254,38 +295,174 @@ public class GamePane extends Pane {
         getChildren().addAll(heartIcon, livesText, scoreText, messageText, levelText, highscoreText);
     }
 
-    /**
-     * (CẬP NHẬT) Cập nhật trạng thái game, xử lý laser và double paddle hết hạn.
-     */
+    // *** PHƯƠNG THỨC MỚI: Tạo màn hình Game Over ***
+    private void createGameOverOverlay() {
+        // Overlay mờ: Tách khỏi VBox và làm Node riêng
+        backdrop = new Rectangle(screenWidth, screenHeight, Color.BLACK);
+        backdrop.setOpacity(0.7);
+        backdrop.setVisible(false); // Ẩn ban đầu
+
+        Text gameOverTitle = new Text("GAME OVER");
+        gameOverTitle.setFont(Font.font("Orbitron", 50));
+        gameOverTitle.setFill(Color.RED);
+
+        Text finalScoreText = new Text("Final Score: 0"); // Score sẽ được cập nhật sau
+        finalScoreText.setFont(Font.font("Arial", 24));
+        finalScoreText.setFill(Color.WHITE);
+
+        Text highscoreNotice = new Text("");
+        highscoreNotice.setFont(Font.font("Arial", 20));
+        highscoreNotice.setFill(Color.YELLOW);
+        highscoreNotice.setId("highscoreNotice"); // Dùng ID để truy cập và cập nhật sau
+
+        // --- NÚT ---
+        Button restartBtn = new Button("RESTART");
+        Button quitBtn = new Button("QUIT");
+
+        for (Button btn : new Button[]{restartBtn, quitBtn}) {
+            btn.setPrefWidth(150);
+            btn.setFont(Font.font("Orbitron", 18));
+            btn.setStyle("""
+                -fx-background-color: #00ffff;
+                -fx-text-fill: black;
+                -fx-border-color: #00ffff;
+                -fx-border-width: 2;
+                -fx-background-radius: 10;
+                -fx-border-radius: 10;
+            """);
+            btn.setOnMouseEntered(e -> btn.setStyle(
+                    "-fx-background-color: white; -fx-text-fill: black; -fx-border-color: white; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;"
+            ));
+            btn.setOnMouseExited(e -> btn.setStyle(
+                    "-fx-background-color: #00ffff; -fx-text-fill: black; -fx-border-color: #00ffff; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;"
+            ));
+        }
+
+        // --- SỰ KIỆN NÚT ---
+        quitBtn.setOnAction(e -> {
+            audio.play("click");
+            gameLoop.stop();
+            audio.stopGameMusic();
+            MainMenu menu = new MainMenu(stage);
+            menu.show();
+        });
+
+        restartBtn.setOnAction(e -> {
+            audio.play("click");
+            restartGame();
+        });
+
+
+        VBox buttonBox = new VBox(10, restartBtn, quitBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        // VBox chính cho nội dung Game Over (không bao gồm backdrop)
+        gameOverOverlay = new VBox(20, gameOverTitle, finalScoreText, highscoreNotice, buttonBox);
+        gameOverOverlay.setAlignment(Pos.CENTER);
+        gameOverOverlay.setPrefSize(screenWidth, screenHeight);
+
+        // Thêm backdrop và overlay riêng biệt vào GamePane
+        getChildren().add(backdrop);
+        getChildren().add(gameOverOverlay);
+
+        // Đảm bảo backdrop và overlay nằm trên cùng, và ẩn đi
+        backdrop.toFront();
+        gameOverOverlay.toFront();
+        gameOverOverlay.setVisible(false);
+    }
+
+    // *** PHƯƠNG THỨC MỚI: Hiển thị màn hình Game Over ***
+    public void showGameOverScreen() {
+        gameRunning = false;
+        audio.stopGameMusic();
+        audio.play("game_over");
+
+        // *** QUAN TRỌNG: Dừng Animation Timer khi game kết thúc ***
+        gameLoop.stop();
+
+        // Cập nhật High Score và thông báo
+        // finalScoreText là phần tử thứ 2 (index 1) trong gameOverOverlay
+        Text finalScoreText = (Text) gameOverOverlay.getChildren().get(1);
+        Text highscoreNotice = (Text) gameOverOverlay.lookup("#highscoreNotice");
+
+        finalScoreText.setText("Final Score: " + score);
+        highscoreNotice.setText("");
+
+        if (score > highscore) {
+            highscore = score;
+            highscoreText.setText("High Score: " + highscore);
+            saveHighScore();
+            highscoreNotice.setText("NEW HIGH SCORE!");
+        }
+
+        // Ẩn các đối tượng game (trừ background, HUD, và các overlay)
+        for (Node node : getChildren()) {
+            // Kiểm tra các Node cần ẩn để màn hình Game Over hiện rõ
+            if (node != background && node != backdrop && node != gameOverOverlay) {
+                node.setVisible(false);
+            }
+        }
+
+        // *** HIỆN CẢ BACKDROP VÀ OVERLAY ***
+        backdrop.setVisible(true); // Hiện backdrop làm tối
+        gameOverOverlay.setVisible(true);
+        gameOverOverlay.toFront();
+    }
+
+    // *** PHƯƠNG THỨC ĐÃ SỬA: Xử lý logic Restart Game ***
+    public void restartGame() {
+        // Ẩn màn hình Game Over và Backdrop
+        gameOverOverlay.setVisible(false);
+        backdrop.setVisible(false);
+
+        // HIỆN LẠI CÁC THÀNH PHẦN CỐ ĐỊNH VÀ HUD
+
+        // 1. Hiển thị HUD
+        heartIcon.setVisible(true);
+        livesText.setVisible(true);
+        scoreText.setVisible(true);
+        levelText.setVisible(true);
+        highscoreText.setVisible(true);
+        background.setVisible(true);
+
+        // 2. Hiển thị Paddle
+        paddle.setVisible(true);
+
+        // 3. Hiển thị Teleporters
+        for (Teleporter teleporter : teleporters) {
+            teleporter.setVisible(true);
+        }
+
+        resetGame(); // Gọi lại logic reset game (đã có)
+        audio.playGameMusic(); // Bắt đầu nhạc game
+
+        // Đặt lại trạng thái game
+        gameRunning = false;
+        messageText.setVisible(true);
+
+        // Bắt đầu lại Animation Timer
+        gameLoop.start();
+    }
+
+    // *** PHƯƠNG THỨC CHÍNH CỦA VÒNG LẶP GAME ***
     private void updateGame(long now) {
-        paddle.update(goLeft, goRight);
+        // paddle.update(goLeft, goRight); // Đã chuyển lên AnimationTimer.handle()
         updatePowerups();
 
         // --- KIỂM TRA HẾT HẠN POWERUP ---
         if (isDoublePaddleActive && now > doublePaddleEndTime) {
             paddle.setNormalLength();
             isDoublePaddleActive = false;
-            System.out.println("DOUBLE PADDLE HẾT HẠN.");
         }
         // ---------------------------------
 
-        if (gameRunning) {
+        // Logic này chỉ chạy khi gameRunning = true
+        updateLasers(now);
 
-            updateLasers(now);
-
-            for (Ball ball : balls) {
-                ball.update();
-            }
-            checkCollisions(now);
-        } else {
-            if (!balls.isEmpty()) {
-                Ball ball = balls.get(0);
-                double newBallX = paddle.getLayoutX() + (paddle.getBoundsInLocal().getWidth() / 2) - ball.getRadius();
-                double newBallY = paddle.getLayoutY() - 15 - (ball.getRadius() * 2);
-                ball.setLayoutX(newBallX);
-                ball.setLayoutY(newBallY);
-            }
+        for (Ball ball : balls) {
+            ball.update();
         }
+        checkCollisions(now);
     }
 
     private void updateLasers(long now) {
@@ -607,26 +784,20 @@ public class GamePane extends Pane {
         long now = System.nanoTime();
 
         if (type == PowerupType.MULTI_BALL) {
-            System.out.println("KÍCH HOẠT MULTI-BALL!");
             spawnMultiBall();
         }
         else if (type == PowerupType.LASER_PADDLE) {
-            System.out.println("KÍCH HOẠT LASER PADDLE! (4 giây)");
-
             isLaserActive = true;
             laserEndTime = now + LASER_DURATION_NANO;
             lastShotTime = 0;
         }
         else if (type == PowerupType.DOUBLE_PADDLE) {
-            System.out.println("KÍCH HOẠT DOUBLE PADDLE! (15 giây)");
-
             paddle.setDoubleLength();
             isDoublePaddleActive = true;
 
             doublePaddleEndTime = now + DOUBLE_PADDLE_DURATION_NANO;
         }
         else if (type == PowerupType.SHIELD) {
-            System.out.println("KÍCH HOẠT SHIELD!");
             isShieldActive = true;
             shieldBar.setVisible(true);
         }
@@ -690,7 +861,7 @@ public class GamePane extends Pane {
 
 
     /**
-     * (CẬP NHẬT) Xử lý mất mạng, reset Powerup và kiểm tra High Score.
+     * (CẬP NHẬT) Xử lý mất mạng.
      */
     private void loseLife() {
         lives--;
@@ -712,38 +883,22 @@ public class GamePane extends Pane {
         isShieldActive = false;
         shieldBar.setVisible(false);
 
+        // *** THAY ĐỔI VỊ TRÍ PADDLE.RESET() ***
+        if (lives > 0) {
+            paddle.reset(); // Reset Paddle về giữa ngay lập tức, nếu game còn tiếp tục
+        }
+
+        // Ball sẽ spawn ở vị trí Paddle HIỆN TẠI (vừa được reset nếu lives > 0)
         removeAndRespawnBall();
 
-        // DỜI LOGIC HIGH SCORE XUỐNG DƯỚI
-
         if (lives <= 0) {
-
-            // CHỈ KIỂM TRA VÀ LƯU KHI THUA HẲN
-            if (score > highscore) {
-                highscore = score;
-                highscoreText.setText("High Score: " + highscore);
-                saveHighScore(); // GỌI HÀM LƯU HIGH SCORE
-            }
-            audio.stopGameMusic();
-            audio.play("game_over");
-
-            messageText.setText("GAME OVER! Returning to Menu...");
-            messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
-            messageText.setVisible(true);
-
-            // Hẹn 3 giây sau quay về menu
-            javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(3));
-            delay.setOnFinished(e -> {
-                MainMenu menu = new MainMenu(stage);
-                menu.show();
-            });
-            delay.play();
-
+            // HIỆN MÀN HÌNH GAME OVER MỚI
+            showGameOverScreen();
         } else {
             messageText.setText("Press SPACE to Continue");
             messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
             messageText.setVisible(true);
-            paddle.reset();
+            // Bỏ paddle.reset() cũ
         }
     }
 
@@ -817,7 +972,6 @@ public class GamePane extends Pane {
             }
         } catch (FileNotFoundException e) {
             // Đây là lỗi bình thường khi chạy lần đầu, không cần in lỗi quá nghiêm trọng
-            System.out.println("Chưa tìm thấy file highscore.txt, khởi tạo High Score = 0.");
         } catch (Exception e) {
             System.out.println("Lỗi: Không thể tải highscore.");
             e.printStackTrace();
