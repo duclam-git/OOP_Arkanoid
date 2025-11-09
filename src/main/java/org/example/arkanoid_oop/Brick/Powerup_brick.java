@@ -36,6 +36,7 @@ public class Powerup_brick extends Brick {
         } else {
             this.powerupType = PowerupType.SHIELD;
         }
+
     }
 
     @Override
