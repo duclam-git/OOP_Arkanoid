@@ -83,7 +83,10 @@ public class MainMenu extends Menu {
         startBtn.setOnAction(e -> {
             audio.play("click");
             audio.stopMenuMusic();
-            audio.playGameMusic();
+            // Fix lỗi
+            if (audio.isSoundEnabled()) {
+                audio.playGameMusic();
+            }
 
             // *** GỌI RESET TRƯỚC KHI TẠO INSTANCE MỚI ***
             GamePane.resetInstance();

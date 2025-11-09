@@ -451,7 +451,10 @@ public class GamePane extends Pane {
         }
 
         resetGame(); // Gọi lại logic reset game (đã có)
-        audio.playGameMusic(); // Bắt đầu nhạc game
+
+        if (audio.isSoundEnabled()) { // Fix lỗi
+            audio.playGameMusic();
+        }
 
         // Đặt lại trạng thái game
         gameRunning = false;
