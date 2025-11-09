@@ -12,13 +12,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 
-public class MainMenu {
-    private Stage stage;
-    private AudioManager audio;
-
-    private static final int SCREEN_WIDTH = 800;
-    private static final int SCREEN_HEIGHT = 600;
-
+public class MainMenu extends Menu {
     // Các thành phần Menu chính
     private VBox menuBoxContainer; // Chứa Title và các nút chính
     private Button debugButton;     // Nút chuyển sang Debug Menu
@@ -31,14 +25,14 @@ public class MainMenu {
     private Image ballImage;
 
     public MainMenu(Stage stage) {
-        this.stage = stage;
-        this.audio = AudioManager.getInstance();
+        super(stage);
 
         // Tải ảnh một lần
         paddleImage = new Image(getClass().getResource("/images/paddle.png").toExternalForm());
         ballImage = new Image(getClass().getResource("/images/ball.png").toExternalForm());
     }
 
+    @Override
     public void show() {
         // --- ẢNH NỀN ---
         Image bgImage = new Image(getClass().getResource("/images/concept.png").toExternalForm());
@@ -72,7 +66,9 @@ public class MainMenu {
         root.getChildren().addAll(menuBoxContainer, debugButton, debugMenuBox, backButton);
 
         // --- NHẠC NỀN LOOP ---
-        audio.playMenuMusic();
+        if (audio.isSoundEnabled()) {
+            audio.playMenuMusic();
+        }
 
         // --- SỰ KIỆN CHUYỂN ĐỔI VIEW ---
         debugButton.setOnAction(e -> switchToDebugMenu());
@@ -105,7 +101,8 @@ public class MainMenu {
 
         optionsBtn.setOnAction(e -> {
             audio.play("click");
-            //   new OptionsMenu(stage).show();
+            OptionsMenu options = new OptionsMenu(stage);
+            options.show();
         });
 
         exitBtn.setOnAction(e -> {

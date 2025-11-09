@@ -4,6 +4,7 @@ import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 
+import java.io.*;
 import java.util.*;
 
 /**
@@ -15,7 +16,9 @@ import java.util.*;
 public class AudioManager {
 
     private static AudioManager instance;
-    private boolean soundEnabled = true;
+
+    private GameSettings settings;
+    private static final String SETTINGS_FILE = "gamesettings.ser";
 
     // AudioClip pool cho SFX
     private final Map<String, List<AudioClip>> clipPools = new HashMap<>();
@@ -26,6 +29,7 @@ public class AudioManager {
     private MediaPlayer gameMusic;
 
     private AudioManager() {
+        loadSettings();
         preloadSounds();
     }
 
@@ -71,7 +75,7 @@ public class AudioManager {
 
     /** Phát âm thanh SFX theo tên */
     public void play(String name) {
-        if (!soundEnabled) return;
+        if (!settings.isSoundEnabled()) return;
         List<AudioClip> list = clipPools.get(name);
         if (list == null || list.isEmpty()) return;
 
@@ -118,10 +122,9 @@ public class AudioManager {
             gameMusic = null;
         }
     }
-
-    /** Bật / tắt âm thanh */
     public void setSoundEnabled(boolean enabled) {
-        this.soundEnabled = enabled;
+        settings.setSoundEnabled(enabled);
+        saveSettings();
         if (!enabled) {
             stopMenuMusic();
             stopGameMusic();
@@ -129,6 +132,46 @@ public class AudioManager {
     }
 
     public boolean isSoundEnabled() {
-        return soundEnabled;
+        return settings.isSoundEnabled();
+    }
+
+    // ============================
+    // LOGIC LOAD/SAVE SETTINGS
+    // ============================
+
+    /** Tải settings từ file. Nếu thất bại, dùng settings mặc định. */
+    private void loadSettings() {
+        try (
+                FileInputStream fileIn = new FileInputStream(SETTINGS_FILE);
+                ObjectInputStream objectIn = new ObjectInputStream(fileIn)
+        ) {
+            settings = (GameSettings) objectIn.readObject();
+            // Nếu tải thành công, cần áp dụng trạng thái âm thanh ngay lập tức
+            if (!settings.isSoundEnabled()) {
+                stopMenuMusic();
+                stopGameMusic();
+            }
+            System.out.println("Tải settings thành công.");
+        } catch (FileNotFoundException e) {
+            System.out.println("File settings không tồn tại.");
+            settings = new GameSettings();
+        } catch (Exception e) {
+            System.err.println("Lỗi khi tải settings: " + e.getMessage());
+            settings = new GameSettings();
+        }
+    }
+
+    /** Lưu settings hiện tại ra file. */
+    private void saveSettings() {
+        try (
+                FileOutputStream fileOut = new FileOutputStream(SETTINGS_FILE);
+                ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)
+        ) {
+            objectOut.writeObject(settings);
+            System.out.println("Lưu settings thành công.");
+        } catch (IOException e) {
+            System.err.println("Lỗi khi lưu settings: " + e.getMessage());
+        }
     }
 }
+
