@@ -35,7 +35,7 @@ public class MainMenu extends Menu {
     @Override
     public void show() {
         // --- ẢNH NỀN ---
-        Image bgImage = new Image(getClass().getResource("/images/concept.png").toExternalForm());
+        Image bgImage = new Image(getClass().getResource("/images/mainMenu.png").toExternalForm());
         ImageView bgView = new ImageView(bgImage);
         bgView.setFitWidth(SCREEN_WIDTH);
         bgView.setFitHeight(SCREEN_HEIGHT);
@@ -150,7 +150,7 @@ public class MainMenu extends Menu {
 
     private VBox createMainMenuVBox() {
         // --- TIÊU ĐỀ ---
-        Text title = new Text("ARKANOID: QUANTUM RIFT");
+        Text title = new Text("");
         title.setFont(Font.font("Orbitron", 40));
         title.setStyle("-fx-fill: #00ffff; -fx-effect: dropshadow(gaussian, black, 10, 0, 0, 0);");
 
