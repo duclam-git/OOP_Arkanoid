@@ -10,6 +10,8 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import org.example.arkanoid_oop.Menu.MainMenu;
+import org.example.arkanoid_oop.Menu.Menu;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package org.example.arkanoid_oop;
+package org.example.arkanoid_oop.Menu;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -10,6 +10,8 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import org.example.arkanoid_oop.BallSkinMenu;
+import org.example.arkanoid_oop.GamePane;
 
 
 public class MainMenu extends Menu {

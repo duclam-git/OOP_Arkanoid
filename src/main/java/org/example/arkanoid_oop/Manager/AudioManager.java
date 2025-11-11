@@ -1,8 +1,9 @@
-package org.example.arkanoid_oop;
+package org.example.arkanoid_oop.Manager;
 
 import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import org.example.arkanoid_oop.GameSettings;
 
 import java.io.*;
 import java.util.*;

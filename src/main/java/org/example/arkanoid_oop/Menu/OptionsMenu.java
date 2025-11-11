@@ -1,4 +1,4 @@
-package org.example.arkanoid_oop;
+package org.example.arkanoid_oop.Menu;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

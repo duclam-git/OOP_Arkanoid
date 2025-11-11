@@ -17,8 +17,10 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import org.example.arkanoid_oop.Brick.*;
 import org.example.arkanoid_oop.Entities.*;
-import org.example.arkanoid_oop.Entities.BallTrailManager;
+import org.example.arkanoid_oop.Manager.BallTrailManager;
 import org.example.arkanoid_oop.Brick.Impervious_brick;
+import org.example.arkanoid_oop.Manager.AudioManager;
+import org.example.arkanoid_oop.Menu.MainMenu;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -78,6 +80,10 @@ public class GamePane extends Pane {
     private VBox gameOverOverlay;
     private Rectangle backdrop;
 
+    // Pause denpendant
+    private boolean isPaused = false;
+    private VBox pauseOverlay;
+
     // --- (MỚI) Thêm các biến cho hiệu ứng đuôi ---
     private BallTrailManager ballTrailManager; // Đối tượng quản lý đuôi
     private long frameCount = 0; // Bộ đếm khung hình
@@ -111,35 +117,29 @@ public class GamePane extends Pane {
         createShieldBar();
         createGameOverOverlay();
 
-        // (MỚI) Khởi tạo trình quản lý đuôi
-        ballTrailManager = new BallTrailManager(this, audio.getSettings().getBallSkinPath()); // 'this' chính là Pane
+        createPauseOverlay();
+        getChildren().add(pauseOverlay);
+        pauseOverlay.toFront();
 
-        // Bắt đầu vòng lặp game
+        ballTrailManager = new BallTrailManager(this, audio.getSettings().getBallSkinPath());
+
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                // (MỚI) Tăng bộ đếm khung hình
                 frameCount++;
-
                 paddle.update(goLeft, goRight);
-
-                // (MỚI) Cập nhật hiệu ứng đuôi (luôn chạy)
                 ballTrailManager.update();
-
-                if (gameRunning) {
+                if (gameRunning && !isPaused) {
                     updateGame(now);
-                } else {
+                } else if (!gameRunning && !isPaused) {
                     updateBallStuckToPaddle();
                 }
-
-                // (MỚI) Đẩy nền xuống dưới cùng (để đuôi hiện trên nền)
                 if(background != null) background.toBack();
             }
         };
         gameLoop.start();
     }
 
-    // (Hàm updateBallStuckToPaddle() giữ nguyên)
     private void updateBallStuckToPaddle() {
         if (!balls.isEmpty()) {
             Ball ball = balls.get(0);
@@ -150,8 +150,6 @@ public class GamePane extends Pane {
         }
     }
 
-
-    // (Hàm getInstance() giữ nguyên)
     public static GamePane getInstance(double width, double height, Stage stage) {
         if (instance == null) {
             instance = new GamePane(width, height, stage);
@@ -159,7 +157,6 @@ public class GamePane extends Pane {
         return instance;
     }
 
-    // (Hàm resetInstance() giữ nguyên)
     public static void resetInstance() {
         if (instance != null && instance.gameLoop != null) {
             instance.gameLoop.stop();
@@ -167,7 +164,6 @@ public class GamePane extends Pane {
         instance = null;
     }
 
-    // (Hàm createShieldBar() giữ nguyên)
     private void createShieldBar() {
         double barHeight = 5;
         shieldBar = new Rectangle(0, screenHeight - barHeight, screenWidth, barHeight);
@@ -177,7 +173,6 @@ public class GamePane extends Pane {
         getChildren().add(shieldBar);
     }
 
-    // (Hàm spawnInitialBall() giữ nguyên)
     private void spawnInitialBall() {
         double ballStartX = paddle.getLayoutX() + (paddle.getBoundsInLocal().getWidth() / 2);
         double ballStartY = paddle.getLayoutY() - 15;
@@ -186,7 +181,6 @@ public class GamePane extends Pane {
         getChildren().add(initialBall);
     }
 
-    // (Hàm createBricks() giữ nguyên)
     private void createBricks() {
         int brickRows = 7;
         int brickCols = 10;
@@ -227,7 +221,6 @@ public class GamePane extends Pane {
         }
     }
 
-    // (Hàm createTeleporters() giữ nguyên)
     private void createTeleporters() {
         for (Teleporter teleporter : teleporters) {
             getChildren().remove(teleporter);
@@ -247,7 +240,6 @@ public class GamePane extends Pane {
         getChildren().addAll(teleporter1, teleporter2);
     }
 
-    // (Hàm createHUD() giữ nguyên - đã sửa để dùng 3 icon trái tim)
     private void createHUD() {
         heartIcons.clear();
         Image heartImage = null;
@@ -281,7 +273,78 @@ public class GamePane extends Pane {
         getChildren().addAll(scoreText, messageText, levelText, highscoreText);
     }
 
-    // (Hàm createGameOverOverlay(), showGameOverScreen() giữ nguyên)
+    private void createPauseOverlay() {
+        if (backdrop == null) {
+            backdrop = new Rectangle(screenWidth, screenHeight, Color.BLACK);
+            backdrop.setOpacity(0.7);
+            backdrop.setVisible(false);
+            getChildren().add(backdrop);
+        }
+
+        Text pauseTitle = new Text("PAUSED");
+        pauseTitle.setFont(Font.font("Orbitron", 50));
+        pauseTitle.setFill(Color.YELLOW);
+
+        Button resumeBtn = new Button("RESUME");
+        Button quitBtn = new Button("QUIT TO MENU");
+
+        for (Button btn : new Button[]{resumeBtn, quitBtn}) {
+            btn.setPrefWidth(250);
+            btn.setFont(Font.font("Orbitron", 20));
+            btn.setStyle("-fx-background-color: #00ffff; -fx-text-fill: black; -fx-border-color: #00ffff; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;");
+            btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-border-color: white; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;"));
+            btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: #00ffff; -fx-text-fill: black; -fx-border-color: #00ffff; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;"));
+        }
+
+        resumeBtn.setOnAction(e -> {
+            audio.play("click");
+            hidePauseMenu();
+        });
+
+        quitBtn.setOnAction(e -> {
+            audio.play("click");
+            gameLoop.stop();
+            audio.stopGameMusic();
+            GamePane.resetInstance(); // Đảm bảo instance được reset
+            MainMenu menu = new MainMenu(stage);
+            menu.show();
+        });
+
+        VBox buttonBox = new VBox(15, resumeBtn, quitBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        pauseOverlay = new VBox(40, pauseTitle, buttonBox);
+        pauseOverlay.setAlignment(Pos.CENTER);
+        pauseOverlay.setPrefSize(screenWidth, screenHeight);
+        pauseOverlay.setVisible(false);
+    }
+
+    public void showPauseMenu() {
+        if (!gameRunning || isPaused) return;
+        isPaused = true;
+        audio.stopGameMusic();
+        audio.play("click");
+
+        backdrop.setVisible(true);
+        pauseOverlay.setVisible(true);
+
+        backdrop.toFront();
+        pauseOverlay.toFront();
+    }
+
+    public void hidePauseMenu() {
+        if (!isPaused) return;
+
+        isPaused = false;
+        if (audio.isSoundEnabled()) {
+            audio.playGameMusic();
+        }
+
+        backdrop.setVisible(false);
+        pauseOverlay.setVisible(false);
+        requestFocus();
+    }
+
     private void createGameOverOverlay() {
         backdrop = new Rectangle(screenWidth, screenHeight, Color.BLACK);
         backdrop.setOpacity(0.7); backdrop.setVisible(false);
@@ -349,9 +412,9 @@ public class GamePane extends Pane {
         gameOverOverlay.toFront();
     }
 
-    // (Hàm restartGame() giữ nguyên)
     public void restartGame() {
         gameOverOverlay.setVisible(false);
+        pauseOverlay.setVisible(false);
         backdrop.setVisible(false);
         for (ImageView icon : heartIcons) icon.setVisible(true);
         scoreText.setVisible(true);
@@ -361,10 +424,11 @@ public class GamePane extends Pane {
         paddle.setVisible(true);
         for (Teleporter teleporter : teleporters) teleporter.setVisible(true);
 
-        resetGame(); // Gọi logic reset
+        resetGame();
 
         if (audio.isSoundEnabled()) audio.playGameMusic();
         gameRunning = false;
+        isPaused = false;
         messageText.setVisible(true);
         gameLoop.start();
     }
@@ -380,14 +444,12 @@ public class GamePane extends Pane {
         }
         updateLasers(now);
 
-        // (CẬP NHẬT) Duyệt và tạo đuôi
-        List<Ball> currentBalls = new ArrayList<>(balls); // Duyệt trên bản sao
+        List<Ball> currentBalls = new ArrayList<>(balls);
         for (Ball ball : currentBalls) {
-            if (!balls.contains(ball)) continue; // Bỏ qua nếu bóng đã bị xóa
-
-            ball.update();
-            // (MỚI) Gọi hàm tạo đuôi
-            ballTrailManager.spawnTrail(ball, frameCount);
+            if (balls.contains(ball)){
+                ball.update();
+                ballTrailManager.spawnTrail(ball, frameCount);
+            }
         }
         checkCollisions(now);
     }
@@ -850,7 +912,6 @@ public class GamePane extends Pane {
         }
     }
 
-    // (Hàm handleKeyPressed(), handleKeyReleased() giữ nguyên)
     public void handleKeyPressed(KeyCode code) {
         if (code == KeyCode.A || code == KeyCode.LEFT) goLeft = true;
         if (code == KeyCode.D || code == KeyCode.RIGHT) goRight = true;
@@ -858,6 +919,11 @@ public class GamePane extends Pane {
             if (!gameRunning && lives > 0 && !balls.isEmpty()) {
                 gameRunning = true;
                 messageText.setVisible(false);
+            }
+        }
+        if (code == KeyCode.P || code == KeyCode.ESCAPE) {
+            if (gameRunning) {
+                showPauseMenu();
             }
         }
         if (code == KeyCode.R) {
