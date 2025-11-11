@@ -1,4 +1,4 @@
-package org.example.arkanoid_oop.Menu;
+package org.example.arkanoid_oop.view.Menu;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -11,7 +11,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import org.example.arkanoid_oop.GameSettings.GameMode;
+import org.example.arkanoid_oop.model.util.GameSettings.GameMode;
 
 public class ModeSelectionMenu extends Menu {
 

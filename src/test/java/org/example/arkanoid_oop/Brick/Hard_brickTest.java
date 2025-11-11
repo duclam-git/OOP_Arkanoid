@@ -1,5 +1,6 @@
 package org.example.arkanoid_oop.Brick;
 
+import org.example.arkanoid_oop.model.Brick.Hard_brick;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

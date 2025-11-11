@@ -1,9 +1,9 @@
-package org.example.arkanoid_oop.Manager;
+package org.example.arkanoid_oop.model.Manager;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
-import org.example.arkanoid_oop.Entities.Ball; // Import lớp Ball
+import org.example.arkanoid_oop.model.Entities.Ball; // Import lớp Ball
 
 import java.util.ArrayList;
 import java.util.Iterator;

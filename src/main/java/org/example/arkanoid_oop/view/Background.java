@@ -1,4 +1,4 @@
-package org.example.arkanoid_oop;
+package org.example.arkanoid_oop.view;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;

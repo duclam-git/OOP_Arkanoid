@@ -1,4 +1,4 @@
-package org.example.arkanoid_oop.Menu;
+package org.example.arkanoid_oop.view.Menu;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -10,8 +10,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import org.example.arkanoid_oop.BallSkinMenu;
-import org.example.arkanoid_oop.GamePane;
+import org.example.arkanoid_oop.controller.GamePane;
 
 
 public class MainMenu extends Menu {
@@ -257,7 +256,7 @@ public class MainMenu extends Menu {
         ballDebugBtn.setOnAction(e -> {
             audio.play("click");
             // GỌI MÀN HÌNH CHỌN SKIN BALL MỚI
-            org.example.arkanoid_oop.BallSkinMenu ballMenu = new org.example.arkanoid_oop.BallSkinMenu(stage);
+            BallSkinMenu ballMenu = new BallSkinMenu(stage);
             ballMenu.show();
         });
 

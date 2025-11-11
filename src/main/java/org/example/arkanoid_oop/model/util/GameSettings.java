@@ -1,5 +1,5 @@
 // Thay thế toàn bộ nội dung của GameSettings.java bằng:
-package org.example.arkanoid_oop;
+package org.example.arkanoid_oop.model.util;
 
 import java.io.Serializable;
 

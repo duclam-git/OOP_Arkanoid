@@ -1,8 +1,8 @@
-package org.example.arkanoid_oop.Brick;
+package org.example.arkanoid_oop.model.Brick;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.example.arkanoid_oop.PowerupType;
+import org.example.arkanoid_oop.model.util.PowerupType;
 
 import java.util.Random;
 
