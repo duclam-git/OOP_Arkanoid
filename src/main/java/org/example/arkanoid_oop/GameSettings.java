@@ -7,6 +7,7 @@ public class GameSettings implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private boolean soundEnabled = true;
+    private String paddleSkinPath = "/images/paddle.png";
 
     public GameSettings() {
     }
@@ -17,5 +18,13 @@ public class GameSettings implements Serializable {
 
     public void setSoundEnabled(boolean soundEnabled) {
         this.soundEnabled = soundEnabled;
+    }
+
+    public String getPaddleSkinPath() {
+        return paddleSkinPath;
+    }
+
+    public void setPaddleSkinPath(String paddleSkinPath) {
+        this.paddleSkinPath = paddleSkinPath;
     }
 }

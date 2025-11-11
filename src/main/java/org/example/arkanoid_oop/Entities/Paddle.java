@@ -20,8 +20,8 @@ public class Paddle extends ImageView {
     private double startY;
     private double originalWidth; // Lưu trữ chiều rộng gốc
 
-    public Paddle(double screenWidth, double screenHeight) {
-        super(new Image(Paddle.class.getResourceAsStream("/images/paddle.png")));
+    public Paddle(double screenWidth, double screenHeight, String skinPath) {
+        super(new Image(Paddle.class.getResourceAsStream(skinPath)));
 
         this.screenWidth = screenWidth;
 
