@@ -87,7 +87,7 @@
                     <execution>
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>org.example.arkanoid_oop/org.example.arkanoid_oop.Main</mainClass>
+                            <mainClass>org.example.arkanoid_oop/org.example.arkanoid_oop.view.Main</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>

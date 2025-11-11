@@ -1,4 +1,4 @@
-package org.example.arkanoid_oop;
+package org.example.arkanoid_oop.controller;
 
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Bounds;
@@ -15,25 +15,47 @@ import javafx.scene.text.Text;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-import org.example.arkanoid_oop.Brick.*;
-import org.example.arkanoid_oop.Entities.*;
-import org.example.arkanoid_oop.Manager.BallTrailManager;
-import org.example.arkanoid_oop.Brick.Impervious_brick;
-import org.example.arkanoid_oop.Manager.AudioManager;
-import org.example.arkanoid_oop.Menu.HighScoreMenu;
-import org.example.arkanoid_oop.Menu.MainMenu;
-import org.example.arkanoid_oop.GameSettings.GameMode;
+
+// ===================================
+// CÁC IMPORT THEO CẤU TRÚC MVC MỚI
+// ===================================
+
+// Model: Brick
+import org.example.arkanoid_oop.model.Brick.Brick;
+import org.example.arkanoid_oop.model.Brick.*; // Bao gồm cả Explosive_brick, Hard_brick, Powerup_brick
+import org.example.arkanoid_oop.model.Brick.Impervious_brick; // Import riêng Impervious_brick nếu cần tham chiếu tường minh
+
+// Model: Entity
+import org.example.arkanoid_oop.model.Entities.*;
+import org.example.arkanoid_oop.model.Entities.Ball;
+import org.example.arkanoid_oop.model.Entities.Laser;
+import org.example.arkanoid_oop.model.Entities.Powerup;
+import org.example.arkanoid_oop.model.Entities.Teleporter;
+
+// Model: Manager và Utility
+import org.example.arkanoid_oop.model.Manager.BallTrailManager;
+import org.example.arkanoid_oop.model.Manager.AudioManager;
+import org.example.arkanoid_oop.model.util.PowerupType;
+import org.example.arkanoid_oop.model.util.GameSettings.GameMode; // Lấy Enum GameMode
+
+// View
+import org.example.arkanoid_oop.view.Background;
+import org.example.arkanoid_oop.view.Menu.HighScoreMenu;
+import org.example.arkanoid_oop.view.Menu.MainMenu;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Collections;
 
-import static org.example.arkanoid_oop.Brick.Brick.BRICK_HEIGHT;
-import static org.example.arkanoid_oop.Brick.Brick.BRICK_WIDTH;
+// Cập nhật static import cho các hằng số BRICK_WIDTH/HEIGHT
+import static org.example.arkanoid_oop.model.Brick.Brick.BRICK_HEIGHT;
+import static org.example.arkanoid_oop.model.Brick.Brick.BRICK_WIDTH;
 
 public class GamePane extends Pane {
     private static GamePane instance;

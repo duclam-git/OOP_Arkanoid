@@ -1,4 +1,4 @@
-package org.example.arkanoid_oop.Brick;
+package org.example.arkanoid_oop.model.Brick;
 
 import javafx.scene.image.ImageView;
 

@@ -1,4 +1,4 @@
-package org.example.arkanoid_oop.Entities;
+package org.example.arkanoid_oop.model.Entities;
 
 import javafx.animation.Interpolator;
 import javafx.animation.RotateTransition;

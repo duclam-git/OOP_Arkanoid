@@ -1,7 +1,7 @@
-package org.example.arkanoid_oop.Menu;
+package org.example.arkanoid_oop.view.Menu;
 
 import javafx.stage.Stage;
-import org.example.arkanoid_oop.Manager.AudioManager;
+import org.example.arkanoid_oop.model.Manager.AudioManager;
 
 public abstract class Menu {
     protected static final int SCREEN_WIDTH = 800;

@@ -1,8 +1,8 @@
-package org.example.arkanoid_oop;
+package org.example.arkanoid_oop.view;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
-import org.example.arkanoid_oop.Menu.MainMenu;
+import org.example.arkanoid_oop.view.Menu.MainMenu;
 
 public class Main extends Application {
 
