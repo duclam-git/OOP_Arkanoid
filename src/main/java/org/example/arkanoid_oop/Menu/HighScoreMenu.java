@@ -11,6 +11,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import org.example.arkanoid_oop.GameSettings.GameMode; // NEW IMPORT
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,20 +22,24 @@ import java.util.List;
 import java.util.Scanner;
 
 public class HighScoreMenu extends Menu {
-    private static final String HIGH_SCORE_FILE = "highscore.txt";
     private static final int MAX_SCORES = 10;
+
+    // NEW: Phương thức lấy tên file High Score dựa trên chế độ
+    private static String getHighScoreFile(GameMode mode) {
+        return "highscore_" + mode.name().toLowerCase() + ".txt";
+    }
 
     public HighScoreMenu(Stage stage) {
         super(stage);
     }
 
     /**
-     * Tải danh sách điểm cao (tối đa 10) từ file.
+     * Tải danh sách điểm cao (tối đa 10) từ file theo chế độ.
      */
-    public static List<Integer> loadHighScores() {
+    public static List<Integer> loadHighScores(GameMode mode) { // MODIFIED
         List<Integer> highScores = new ArrayList<>();
         try {
-            File file = new File(HIGH_SCORE_FILE);
+            File file = new File(getHighScoreFile(mode)); // MODIFIED
             if (file.exists()) {
                 Scanner scanner = new Scanner(file);
                 while (scanner.hasNextLine()) {
@@ -51,7 +56,7 @@ public class HighScoreMenu extends Menu {
                 highScores = highScores.subList(0, MAX_SCORES);
             }
         } catch (Exception e) {
-            System.out.println("Lỗi: Không thể tải high scores.");
+            System.out.println("Lỗi: Không thể tải high scores cho chế độ " + mode.getDisplayName());
         }
         if (highScores.isEmpty()) {
             highScores.add(0);
@@ -60,16 +65,16 @@ public class HighScoreMenu extends Menu {
     }
 
     /**
-     * Lưu danh sách điểm cao ra file.
+     * Lưu danh sách điểm cao ra file theo chế độ.
      */
-    public static void saveHighScores(List<Integer> highScores) {
+    public static void saveHighScores(List<Integer> highScores, GameMode mode) { // MODIFIED
         highScores.sort(Collections.reverseOrder());
         if (highScores.size() > MAX_SCORES) {
             highScores = highScores.subList(0, MAX_SCORES);
         }
 
         try {
-            PrintWriter writer = new PrintWriter(HIGH_SCORE_FILE);
+            PrintWriter writer = new PrintWriter(getHighScoreFile(mode)); // MODIFIED
             for (int score : highScores) {
                 writer.println(score);
             }
@@ -82,8 +87,8 @@ public class HighScoreMenu extends Menu {
     /**
      * Cập nhật điểm mới vào danh sách. Trả về true nếu là điểm cao nhất mới.
      */
-    public static boolean updateHighScores(int newScore) {
-        List<Integer> highScores = loadHighScores();
+    public static boolean updateHighScores(int newScore, GameMode mode) { // MODIFIED
+        List<Integer> highScores = loadHighScores(mode); // MODIFIED
         boolean isNewTopScore = false;
 
         if (highScores.size() < MAX_SCORES || newScore > highScores.get(highScores.size() - 1)) {
@@ -98,7 +103,7 @@ public class HighScoreMenu extends Menu {
                 highScores = highScores.subList(0, MAX_SCORES);
             }
 
-            saveHighScores(highScores);
+            saveHighScores(highScores, mode); // MODIFIED
 
             if (!highScores.isEmpty() && highScores.get(0) == newScore) {
                 isNewTopScore = true;
@@ -128,9 +133,19 @@ public class HighScoreMenu extends Menu {
         title.setFont(Font.font("Orbitron", 40));
         title.setStyle("-fx-fill: #00ffff; -fx-effect: dropshadow(gaussian, black, 10, 0, 0, 0);");
 
-        VBox scoreList = createScoreListDisplay();
+        // NEW: Container cho các bảng điểm
+        HBox scoreDisplayContainer = new HBox(30); // Giảm khoảng cách giữa 3 cột
+        scoreDisplayContainer.setAlignment(Pos.CENTER);
+        scoreDisplayContainer.setPadding(new Insets(0, 0, 50, 0));
 
-        mainContainer.getChildren().addAll(title, scoreList);
+
+        // Duyệt qua tất cả các chế độ để tạo bảng điểm tương ứng
+        for (GameMode mode : GameMode.values()) {
+            VBox modeScores = createScoreListDisplay(mode); // MODIFIED
+            scoreDisplayContainer.getChildren().add(modeScores);
+        }
+
+        mainContainer.getChildren().addAll(title, scoreDisplayContainer); // MODIFIED
 
         Button backButton = createBackButton();
 
@@ -141,11 +156,23 @@ public class HighScoreMenu extends Menu {
         stage.show();
     }
 
-    private VBox createScoreListDisplay() {
-        List<Integer> scores = loadHighScores();
+    private VBox createScoreListDisplay(GameMode mode) { // MODIFIED: Thêm tham số mode
+        // Tiêu đề chế độ
+        Text modeTitle = new Text(mode.getDisplayName().toUpperCase());
+        modeTitle.setFont(Font.font("Orbitron", 22));
+        // Màu tiêu đề khác nhau cho mỗi mode
+        Color modeColor = switch (mode) {
+            case EASY -> Color.LIMEGREEN;
+            case NORMAL -> Color.LIGHTBLUE;
+            case HARD -> Color.ORANGE;
+        };
+        modeTitle.setFill(modeColor);
+
+        List<Integer> scores = loadHighScores(mode); // MODIFIED
         VBox listContainer = new VBox(5);
         listContainer.setAlignment(Pos.CENTER_LEFT);
-        listContainer.setMinWidth(SCREEN_WIDTH * 0.5);
+        listContainer.setMinWidth(SCREEN_WIDTH * 0.2);
+        listContainer.setMaxWidth(SCREEN_WIDTH * 0.25);
 
         for (int i = 0; i < scores.size(); i++) {
             int score = scores.get(i);
@@ -165,9 +192,19 @@ public class HighScoreMenu extends Menu {
             listContainer.getChildren().add(scoreEntry);
         }
 
-        VBox wrapper = new VBox(listContainer);
-        wrapper.setAlignment(Pos.CENTER);
+        VBox wrapper = new VBox(10, modeTitle, listContainer); // MODIFIED: Thêm modeTitle
+        wrapper.setAlignment(Pos.TOP_CENTER); // Đảm bảo căn chỉnh từ trên xuống
+        // Thêm đường viền cho mỗi chế độ
+        wrapper.setStyle("-fx-border-color: " + toWebHex(modeColor) + "; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: rgba(0, 0, 0, 0.3);");
         return wrapper;
+    }
+
+    // NEW: Hàm chuyển Color sang chuỗi HEX cho CSS
+    private String toWebHex(Color color) {
+        return String.format("#%02X%02X%02X",
+                (int) (color.getRed() * 255),
+                (int) (color.getGreen() * 255),
+                (int) (color.getBlue() * 255));
     }
 
 
@@ -175,6 +212,7 @@ public class HighScoreMenu extends Menu {
      * Tạo nút BACK ở góc dưới trái.
      */
     private Button createBackButton() {
+// ... (Logic tạo nút Back giữ nguyên) ...
         Button backBtn = new Button("BACK");
         backBtn.setFont(Font.font("Orbitron", 18));
         backBtn.setStyle("""
