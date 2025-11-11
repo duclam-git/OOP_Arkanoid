@@ -121,12 +121,13 @@ public class GamePane extends Pane {
         background = new Background(screenWidth, screenHeight);
         getChildren().add(background);
 
-        paddle = new Paddle(screenWidth, screenHeight, audio.getSettings().getPaddleSkinPath()); //
+        // SỬA DÒNG NÀY: Truyền 'this.gameMode' vào hàm tạo Paddle
+        paddle = new Paddle(screenWidth, screenHeight, audio.getSettings().getPaddleSkinPath(), this.gameMode);
         getChildren().add(paddle);
 
-        spawnInitialBall();
+        spawnInitialBall(); // Hàm này cũng đã được sửa
 
-        createBricks();
+        createBricks(); // Hàm này đã được sửa
         for (Brick brick : bricks) {
             getChildren().add(brick.getView());
         }
@@ -200,11 +201,17 @@ public class GamePane extends Pane {
     private void spawnInitialBall() {
         double ballStartX = paddle.getLayoutX() + (paddle.getBoundsInLocal().getWidth() / 2);
         double ballStartY = paddle.getLayoutY() - 15;
-        Ball initialBall = new Ball(screenWidth, screenHeight, ballStartX, ballStartY, audio.getSettings().getBallSkinPath());
+
+        // SỬA DÒNG NÀY: Truyền 'this.gameMode' vào hàm tạo Ball
+        Ball initialBall = new Ball(screenWidth, screenHeight, ballStartX, ballStartY, audio.getSettings().getBallSkinPath(), this.gameMode);
+
         balls.add(initialBall);
         getChildren().add(initialBall);
     }
 
+    // ==================================================================
+    // HÀM CREATEBRICKS ĐÃ ĐƯỢC CẬP NHẬT THEO LOGIC CỦA BẠN
+    // ==================================================================
     private void createBricks() {
         int brickRows = 7;
         int brickCols = 10;
@@ -212,38 +219,72 @@ public class GamePane extends Pane {
         double totalBrickWidth = (brickCols * BRICK_WIDTH) + ((brickCols - 1) * padding);
         double offsetLeft = (screenWidth - totalBrickWidth) / 2;
         double offsetTop = 50;
+
         for (int r = 0; r < brickRows; r++) {
             for (int c = 0; c < brickCols; c++) {
                 double x = offsetLeft + c * (BRICK_WIDTH + padding);
                 double y = offsetTop + r * (BRICK_HEIGHT + padding);
                 Brick brick = null;
-                double chance = rand.nextDouble();
+                double chance = rand.nextDouble(); // 0.0 -> 1.0
 
-                // 10% cơ hội cho gạch không thể phá hủy (chỉ từ màn 2 trở đi)
-                if (chance < 0.1) {
-                    brick = new Impervious_brick(x, y);
-                }
-                // 10% gạch nổ (0.1 -> 0.2)
-                else if (chance < 0.2) {
-                    brick = new Explosive_brick(x, y);
-                }
-                // 15% gạch powerup (0.2 -> 0.35)
-                else if (chance < 0.35) {
-                    brick = new Powerup_brick(x, y);
-                }
-                // 20% gạch cứng (0.35 -> 0.55)
-                else if (chance < 0.55) {
-                    brick = new Hard_brick(x, y);
-                }
-                // 45% gạch thường
-                else {
-                    brick = new Normal_brick(x, y);
+                // (CẬP NHẬT LOGIC ĐỘ KHÓ THEO YÊU CẦU MỚI)
+
+                if (gameMode == GameMode.EASY) {
+                    // Dễ: Nhiều gạch nổ (15%), nhiều powerup, nhiều gạch thường
+                    if (chance < 0.15) brick = new Explosive_brick(x, y);    // 15% (Tăng từ 10%)
+                    else if (chance < 0.40) brick = new Powerup_brick(x, y); // 25%
+                    else if (chance < 0.55) brick = new Hard_brick(x, y);    // 15%
+                    else brick = new Normal_brick(x, y);                     // 45% (Giảm từ 50%)
+
+                } else if (gameMode == GameMode.NORMAL) {
+                    // Vừa: Tỉ lệ chuẩn, không gạch bất tử
+                    if (chance < 0.10) brick = new Explosive_brick(x, y);    // 10% (Giữ nguyên)
+                    else if (chance < 0.25) brick = new Powerup_brick(x, y); // 15%
+                    else if (chance < 0.45) brick = new Hard_brick(x, y);    // 20%
+                    else brick = new Normal_brick(x, y);                     // 55% (Gốc 45% + 10% cũ)
+
+                } else { // (GameMode.HARD)
+                    // Khó: Gạch bất tử bao quanh, 2 lỗ ở giữa, bên trong toàn gạch khó.
+
+                    // 1. Xây tường bao (Hàng trên cùng, Cột trái, Cột phải)
+                    if (r == 0 || c == 0 || c == 9) {
+                        brick = new Impervious_brick(x, y);
+                    }
+                    // 2. Xây tường đáy và tạo 2 lỗ
+                    else if (r == 6) { // Hàng dưới cùng
+                        if (c == 4 || c == 5) {
+                            // Đây là 2 lỗ ở giữa, không tạo gạch
+                            continue; // Bỏ qua, không add brick
+                        } else {
+                            brick = new Impervious_brick(x, y); // Phần còn lại của tường đáy
+                        }
+                    }
+                    // 3. Xây gạch bên trong (Rows 1-5, Cols 1-8)
+                    else {
+                        // Tỉ lệ % của Hard (bỏ 20% Impervious), tổng là 80%
+                        // Tỉ lệ mới = Tỉ lệ cũ / 0.8
+                        // CẬP NHẬT TỈ LỆ MỚI CHO HARD:
+                        // Explosive: 5% (Giảm mạnh)
+                        // Powerup:   12.5% (Giữ nguyên)
+                        // Hard:      51.25% (Tăng mạnh)
+                        // Normal:    31.25% (Giữ nguyên)
+
+                        if (chance < 0.05) brick = new Explosive_brick(x, y);    // 5%
+                        else if (chance < 0.175) brick = new Powerup_brick(x, y); // 12.5% (0.05 + 0.125)
+                        else if (chance < 0.6875) brick = new Hard_brick(x, y);    // 51.25% (0.175 + 0.5125)
+                        else brick = new Normal_brick(x, y);                       // 31.25%
+                    }
                 }
 
-                bricks.add(brick);
+                // Chỉ thêm gạch nếu nó được tạo
+                // (Quan trọng vì chế độ Hard có thể 'continue' và bỏ qua việc tạo gạch)
+                if (brick != null) {
+                    bricks.add(brick);
+                }
             }
         }
     }
+
 
     private void createTeleporters() {
         for (Teleporter teleporter : teleporters) {
@@ -718,8 +759,11 @@ public class GamePane extends Pane {
                     double paddleCenter = paddleBounds.getCenterX();
                     double paddleHalfWidth = paddleBounds.getWidth() / 2.0;
                     double relativeHit = (hitPointX - paddleCenter) / paddleHalfWidth;
+
+                    // SỬA LẠI: Lấy tốc độ cơ sở từ chính quả bóng
                     double newDx = relativeHit * (ball.getSpeed() * 1.5);
                     double newDy = -ball.getSpeed();
+
                     ball.setDirection(newDx, newDy);
                 }
             }
@@ -858,9 +902,28 @@ public class GamePane extends Pane {
         }
     }
 
+    // ==================================================================
+    // HÀM SPAWNPOWERUP ĐÃ ĐƯỢC CẬP NHẬT
+    // ==================================================================
     private void spawnPowerup(Powerup_brick brick) {
         double chance = rand.nextDouble();
-        if (chance <= 0.5) {
+
+        // (MỚI) Tỉ lệ rơi vật phẩm dựa trên độ khó
+        double spawnChance;
+        switch (gameMode) {
+            case EASY:
+                spawnChance = 0.75; // 75% cơ hội rơi
+                break;
+            case HARD:
+                spawnChance = 0.30; // 30% cơ hội rơi
+                break;
+            case NORMAL:
+            default:
+                spawnChance = 0.50; // 50% cơ hội rơi
+                break;
+        }
+
+        if (chance <= spawnChance) { // Sửa lại: dùng 'spawnChance'
             PowerupType type = brick.getPowerupType();
             double x = brick.getCenterX();
             double y = brick.getCenterY();
@@ -869,6 +932,7 @@ public class GamePane extends Pane {
             getChildren().add(powerup);
         }
     }
+
     private void activatePowerup(PowerupType type) {
         long now = System.nanoTime();
         if (type == PowerupType.MULTI_BALL) {
@@ -889,6 +953,10 @@ public class GamePane extends Pane {
             shieldBar.setVisible(true);
         }
     }
+
+    // ==================================================================
+    // HÀM SPAWNMULTIBALL ĐÃ ĐƯỢC CẬP NHẬT
+    // ==================================================================
     private void spawnMultiBall() {
         if (balls.isEmpty()) return;
         List<Ball> newBalls = new ArrayList<>();
@@ -899,10 +967,12 @@ public class GamePane extends Pane {
             if (balls.contains(sourceBall)) {
                 double ballX = sourceBall.getLayoutX() + sourceBall.getRadius();
                 double ballY = sourceBall.getLayoutY() + sourceBall.getRadius();
-                double speed = sourceBall.getSpeed();
-                Ball newBall1 = new Ball(ballX, ballY, screenWidth, screenHeight, -speed * 1.5, -speed * 0.5, skinPath);
+                double speed = sourceBall.getSpeed(); // Tốc độ này đã chuẩn theo độ khó
+
+                // SỬA LẠI CÁC DÒNG NÀY (thêm 'this.gameMode'):
+                Ball newBall1 = new Ball(ballX, ballY, screenWidth, screenHeight, -speed * 1.5, -speed * 0.5, skinPath, this.gameMode);
                 newBalls.add(newBall1);
-                Ball newBall2 = new Ball(ballX, ballY, screenWidth, screenHeight, speed * 1.5, -speed * 0.5, skinPath);
+                Ball newBall2 = new Ball(ballX, ballY, screenWidth, screenHeight, speed * 1.5, -speed * 0.5, skinPath, this.gameMode);
                 newBalls.add(newBall2);
             }
         }

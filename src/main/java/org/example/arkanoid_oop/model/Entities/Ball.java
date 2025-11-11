@@ -5,6 +5,7 @@ import javafx.animation.RotateTransition;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
+import org.example.arkanoid_oop.model.util.GameSettings.GameMode; // THÊM IMPORT
 
 /**
  * Lớp Ball (quả bóng/thiên thạch) kế thừa ImageView.
@@ -13,17 +14,21 @@ import javafx.util.Duration;
 public class Ball extends ImageView {
 
     public static final double BALL_RADIUS = 10; // Kích thước bán kính hiển thị
-    // (MỚI) Hằng số tốc độ
-    public static final double BALL_SPEED = 2.5;
+
+    // XÓA HẰNG SỐ TỐC ĐỘ TĨNH
+    // public static final double BALL_SPEED = 2.5;
 
     // Tốc độ và hướng di chuyển
     private double dx;
     private double dy;
+    private double ballSpeed; // THÊM BIẾN TỐC ĐỘ CỦA INSTANCE
+    private GameMode gameMode; // THÊM BIẾN ĐỂ LƯU GAMEMODE
 
     private double screenWidth, screenHeight;
     private double startX, startY; // Vị trí ban đầu
 
-    public Ball(double screenWidth, double screenHeight, double startX, double startY, String skinPath) {
+    // SỬA HÀM KHỞI TẠO (THÊM THAM SỐ 'gameMode')
+    public Ball(double screenWidth, double screenHeight, double startX, double startY, String skinPath, GameMode gameMode) {
         // 1. Tải ảnh quả bóng (hoặc thiên thạch)
         super(new Image(Ball.class.getResourceAsStream(skinPath)));
 
@@ -31,6 +36,10 @@ public class Ball extends ImageView {
         this.screenHeight = screenHeight;
         this.startX = startX;
         this.startY = startY;
+        this.gameMode = gameMode; // LƯU GAMEMODE
+
+        // (MỚI) Đặt tốc độ dựa trên độ khó
+        this.ballSpeed = getBaseBallSpeed(this.gameMode);
 
         // Đặt kích thước
         setFitWidth(BALL_RADIUS * 2);
@@ -49,9 +58,11 @@ public class Ball extends ImageView {
         rt.play();
     }
 
-    // (MỚI) Phương thức khởi tạo cho Multi-Ball, sử dụng vị trí hiện tại
-    public Ball(double currentX, double currentY, double screenWidth, double screenHeight, double dx, double dy, String skinPath) {
-        this(screenWidth, screenHeight, currentX, currentY, skinPath); // Gọi constructor chính để khởi tạo hình ảnh và animation
+    // SỬA HÀM KHỞI TẠO THỨ HAI (THÊM THAM SỐ 'gameMode')
+    public Ball(double currentX, double currentY, double screenWidth, double screenHeight, double dx, double dy, String skinPath, GameMode gameMode) {
+        // SỬA LẠI LỆNH GỌI 'this'
+        this(screenWidth, screenHeight, currentX, currentY, skinPath, gameMode); // Gọi constructor chính
+
         // Ghi đè lại vị trí và hướng
         setLayoutX(currentX - BALL_RADIUS);
         setLayoutY(currentY - BALL_RADIUS);
@@ -59,6 +70,21 @@ public class Ball extends ImageView {
         this.dy = dy;
         this.startX = currentX;
         this.startY = currentY;
+    }
+
+    /**
+     * (HÀM MỚI) Lấy tốc độ cơ sở của bóng dựa trên độ khó.
+     */
+    private double getBaseBallSpeed(GameMode mode) {
+        switch (mode) {
+            case EASY:
+                return 2.0; // Dễ = Bóng chậm
+            case HARD:
+                return 3.5; // Khó = Bóng nhanh
+            case NORMAL:
+            default:
+                return 2.5; // Bình thường
+        }
     }
 
     /**
@@ -70,8 +96,8 @@ public class Ball extends ImageView {
         setLayoutY(startY - BALL_RADIUS);
 
         // Tốc độ ngẫu nhiên ban đầu
-        dx = Math.random() > 0.5 ? BALL_SPEED : -BALL_SPEED; // Sử dụng hằng số
-        dy = -BALL_SPEED; // Luôn bay lên
+        dx = Math.random() > 0.5 ? this.ballSpeed : -this.ballSpeed; // Sửa: Dùng 'this.ballSpeed'
+        dy = -this.ballSpeed; // Sửa: Dùng 'this.ballSpeed'
     }
 
     /**
@@ -101,16 +127,17 @@ public class Ball extends ImageView {
             reverseDy();
         }
 
-        // (MỚI) Giới hạn tốc độ để không bị lỗi nảy do quá nhanh
-        if (Math.abs(dx) > BALL_SPEED * 1.5) {
-            dx = (dx > 0) ? BALL_SPEED * 1.5 : -BALL_SPEED * 1.5;
+        // (SỬA) Giới hạn tốc độ để không bị lỗi nảy do quá nhanh
+        if (Math.abs(dx) > this.ballSpeed * 1.5) {
+            dx = (dx > 0) ? this.ballSpeed * 1.5 : -this.ballSpeed * 1.5;
         }
     }
 
     // (MỚI) Thiết lập hướng mới sau va chạm ván trượt
     public void setDirection(double newDx, double newDy) {
         // Đảm bảo tốc độ không đổi, chỉ hướng thay đổi
-        double currentSpeed = Math.sqrt(dx * dx + dy * dy);
+        // SỬA: Dùng 'this.ballSpeed' làm tốc độ cơ sở
+        double currentSpeed = this.ballSpeed;
 
         // Chuẩn hóa hướng mới
         double magnitude = Math.sqrt(newDx * newDx + newDy * newDy);
@@ -146,8 +173,8 @@ public class Ball extends ImageView {
         return dx;
     }
 
-    // Thêm getter cho tốc độ cơ sở
+    // SỬA HÀM NÀY
     public double getSpeed() {
-        return BALL_SPEED;
+        return this.ballSpeed; // Trả về tốc độ cơ sở của instance này
     }
 }

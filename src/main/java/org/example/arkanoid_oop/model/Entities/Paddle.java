@@ -2,6 +2,7 @@ package org.example.arkanoid_oop.model.Entities;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import org.example.arkanoid_oop.model.util.GameSettings.GameMode; // THÊM IMPORT
 
 /**
  * Lớp Paddle (ván trượt) kế thừa ImageView.
@@ -9,8 +10,8 @@ import javafx.scene.image.ImageView;
  */
 public class Paddle extends ImageView {
 
-    private static final double PADDLE_WIDTH_DISPLAY = 120;
-    private static final double PADDLE_HEIGHT_DISPLAY = 30; // NEW: Thêm hằng số chiều cao cố định
+    // private static final double PADDLE_WIDTH_DISPLAY = 120; // ĐÃ XÓA
+    private static final double PADDLE_HEIGHT_DISPLAY = 30;
     private static final int PADDLE_SPEED = 6;
 
     private double screenWidth;
@@ -20,17 +21,18 @@ public class Paddle extends ImageView {
     private double startY;
     private double originalWidth; // Lưu trữ chiều rộng gốc
 
-    public Paddle(double screenWidth, double screenHeight, String skinPath) {
+    // SỬA HÀM KHỞI TẠO (THÊM THAM SỐ 'gameMode')
+    public Paddle(double screenWidth, double screenHeight, String skinPath, GameMode gameMode) {
         super(new Image(Paddle.class.getResourceAsStream(skinPath)));
 
         this.screenWidth = screenWidth;
 
-        // Thiết lập kích thước cho ảnh
-        setFitWidth(PADDLE_WIDTH_DISPLAY);
-        setFitHeight(PADDLE_HEIGHT_DISPLAY); // CỐ ĐỊNH CHIỀU CAO
-        // setPreserveRatio(true); // ĐÃ XÓA: Không giữ tỷ lệ để cố định chiều cao
+        // Tính toán chiều rộng gốc dựa trên độ khó
+        this.originalWidth = getBasePaddleWidth(gameMode);
 
-        this.originalWidth = PADDLE_WIDTH_DISPLAY; // Lưu trữ kích thước gốc
+        // Thiết lập kích thước cho ảnh
+        setFitWidth(this.originalWidth); // Sửa lại: dùng this.originalWidth
+        setFitHeight(PADDLE_HEIGHT_DISPLAY); // CỐ ĐỊNH CHIỀU CAO
 
         this.currentWidth = getFitWidth(); // Lấy chiều rộng sau khi đã đặt setFitWidth
 
@@ -40,6 +42,21 @@ public class Paddle extends ImageView {
 
         // Áp dụng vị trí ban đầu
         reset();
+    }
+
+    /**
+     * Lấy chiều rộng cơ sở của ván trượt dựa trên độ khó.
+     */
+    private double getBasePaddleWidth(GameMode mode) {
+        switch (mode) {
+            case EASY:
+                return 150; // Dễ = Ván to hơn
+            case HARD:
+                return 90;  // Khó = Ván nhỏ hơn
+            case NORMAL:
+            default:
+                return 120; // Bình thường
+        }
     }
 
     /**
