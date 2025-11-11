@@ -314,6 +314,9 @@ public class GamePane extends Pane {
 
     public void showPauseMenu() {
         if (!gameRunning || isPaused) return;
+        goLeft = false;
+        goRight = false;
+
         isPaused = true;
         audio.stopGameMusic();
         audio.play("click");
@@ -639,6 +642,12 @@ public class GamePane extends Pane {
 
         ballTrailManager.clear();
 
+        for (Brick brick : bricks) {
+            getChildren().remove(brick.getView());
+        }
+        // 2. Xóa danh sách đối tượng gạch để chuẩn bị cho level mới
+        bricks.clear();
+
         createBricks();
         for (Brick brick : bricks) {
             getChildren().add(brick.getView());
@@ -788,7 +797,18 @@ public class GamePane extends Pane {
             }
             scoreText.setText("Score: " + score);
         }
-        if (bricks.isEmpty()) {
+        // Kiểm tra xem còn gạch KHÔNG BẤT TỬ nào còn lại không
+        boolean hasDestroyableBricksLeft = false;
+        for (Brick brick : bricks) {
+            // Nếu tìm thấy bất kỳ viên gạch nào KHÔNG phải là Impervious_brick
+            if (!(brick instanceof Impervious_brick)) {
+                hasDestroyableBricksLeft = true;
+                break;
+            }
+        }
+
+// Nếu không còn gạch phá hủy được nào (chỉ còn lại gạch bất tử)
+        if (!hasDestroyableBricksLeft) {
             audio.play("level_complete");
             startNextLevel();
         }
@@ -940,27 +960,31 @@ public class GamePane extends Pane {
     }
 
     public void handleKeyPressed(KeyCode code) {
-        if (code == KeyCode.A || code == KeyCode.LEFT) goLeft = true;
-        if (code == KeyCode.D || code == KeyCode.RIGHT) goRight = true;
-        if (code == KeyCode.SPACE) {
-            if (!gameRunning && lives > 0 && !balls.isEmpty()) {
-                gameRunning = true;
-                messageText.setVisible(false);
+        if (!isPaused) {
+            if (code == KeyCode.A || code == KeyCode.LEFT) goLeft = true;
+            if (code == KeyCode.D || code == KeyCode.RIGHT) goRight = true;
+            if (code == KeyCode.SPACE) {
+                if (!gameRunning && lives > 0 && !balls.isEmpty()) {
+                    gameRunning = true;
+                    messageText.setVisible(false);
+                }
             }
-        }
-        if (code == KeyCode.P || code == KeyCode.ESCAPE) {
-            if (gameRunning) {
-                showPauseMenu();
+            if (code == KeyCode.P || code == KeyCode.ESCAPE) {
+                if (gameRunning) {
+                    showPauseMenu();
+                }
             }
-        }
-        if (code == KeyCode.R) {
-            if (!gameRunning) {
-                resetGame();
+            if (code == KeyCode.R) {
+                if (!gameRunning) {
+                    resetGame();
+                }
             }
         }
     }
     public void handleKeyReleased(KeyCode code) {
-        if (code == KeyCode.A || code == KeyCode.LEFT) goLeft = false;
-        if (code == KeyCode.D || code == KeyCode.RIGHT) goRight = false;
+        if (!isPaused) {
+            if (code == KeyCode.A || code == KeyCode.LEFT) goLeft = false;
+            if (code == KeyCode.D || code == KeyCode.RIGHT) goRight = false;
+        }
     }
 }
