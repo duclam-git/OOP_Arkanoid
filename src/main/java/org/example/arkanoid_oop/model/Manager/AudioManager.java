@@ -3,6 +3,7 @@ package org.example.arkanoid_oop.model.Manager;
 import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.concurrent.Task;
 import org.example.arkanoid_oop.model.util.GameSettings;
 
 import java.io.*;
@@ -35,11 +36,14 @@ public class AudioManager {
     private MediaPlayer gameMusic;
 
     private AudioManager() {
-        loadSettings();
-        preloadSounds();
+        // Khởi tạo settings mặc định để tránh NullPointerException
+        // loadSettings() sẽ được gọi và ghi đè sau
+        settings = new GameSettings();
     }
 
-    /** Singleton */
+    /**
+     * Singleton
+     */
     public static AudioManager getInstance() {
         if (instance == null) {
             instance = new AudioManager();
@@ -47,8 +51,10 @@ public class AudioManager {
         return instance;
     }
 
-    /** Load toàn bộ âm thanh vào pool */
-    private void preloadSounds() {
+    /**
+     * Load toàn bộ âm thanh vào pool
+     */
+    public void preloadSounds() {
         loadClip("hit", "/sounds/hit.wav", 5);
         loadClip("brick", "/sounds/brick_break.wav", 5);
         loadClip("laser", "/sounds/laser.wav", 4);
@@ -64,7 +70,9 @@ public class AudioManager {
         loadClip("game_bg", "/sounds/game_bg.wav", 1);
     }
 
-    /** Load một loại âm thanh và tạo pool */
+    /**
+     * Load một loại âm thanh và tạo pool
+     */
     private void loadClip(String name, String path, int poolSize) {
         List<AudioClip> list = new ArrayList<>();
         for (int i = 0; i < poolSize; i++) {
@@ -79,7 +87,9 @@ public class AudioManager {
         clipPools.put(name, list);
     }
 
-    /** Phát âm thanh SFX theo tên */
+    /**
+     * Phát âm thanh SFX theo tên
+     */
     public void play(String name) {
         if (!settings.isSoundEnabled()) return;
         List<AudioClip> list = clipPools.get(name);
@@ -128,6 +138,7 @@ public class AudioManager {
             gameMusic = null;
         }
     }
+
     public void setSoundEnabled(boolean enabled) {
         settings.setSoundEnabled(enabled);
         saveSettings();
@@ -145,7 +156,9 @@ public class AudioManager {
     // LOGIC LOAD/SAVE SETTINGS
     // ============================
 
-    /** Tải settings từ file. Nếu thất bại, dùng settings mặc định. */
+    /**
+     * Tải settings từ file. Nếu thất bại, dùng settings mặc định.
+     */
     public void loadSettings() {
         try (
                 FileInputStream fileIn = new FileInputStream(SETTINGS_FILE);
@@ -173,17 +186,41 @@ public class AudioManager {
         }
     }
 
-    /** Lưu settings hiện tại ra file. */
+    /**
+     * (CẬP NHẬT) Lưu settings hiện tại ra file ở luồng nền.
+     */
     public void saveSettings() {
-        try (
-                FileOutputStream fileOut = new FileOutputStream(SETTINGS_FILE);
-                ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)
-        ) {
-            objectOut.writeObject(settings);
-            System.out.println("Lưu settings thành công.");
-        } catch (IOException e) {
-            System.err.println("Lỗi khi lưu settings: " + e.getMessage());
-        }
+        // Sao chép settings hiện tại để luồng nền làm việc
+        // Điều này tránh trường hợp luồng chính thay đổi settings trong khi luồng nền đang lưu
+        final GameSettings settingsToSave = this.settings;
+
+        // Tạo một Task (nhiệm vụ) để chạy ở luồng nền
+        Task<Void> saveTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                // Logic này chạy trên luồng nền
+                try (
+                        FileOutputStream fileOut = new FileOutputStream(SETTINGS_FILE);
+                        ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)
+                ) {
+                    objectOut.writeObject(settingsToSave);
+                    System.out.println("Lưu settings (background) thành công.");
+                } catch (IOException e) {
+                    System.err.println("Lỗi khi lưu settings (background): " + e.getMessage());
+                    // Ném lỗi để onFailed có thể bắt được
+                    throw e;
+                }
+                return null;
+            }
+        };
+
+        // (Tùy chọn) Xử lý nếu luồng nền gặp lỗi
+        saveTask.setOnFailed(e -> {
+            System.err.println("Task lưu settings thất bại!");
+            saveTask.getException().printStackTrace();
+        });
+
+        // Khởi động Task này trong một Thread mới
+        new Thread(saveTask).start();
     }
 }
-

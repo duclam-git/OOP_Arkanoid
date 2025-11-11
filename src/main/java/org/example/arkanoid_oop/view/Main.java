@@ -2,7 +2,7 @@ package org.example.arkanoid_oop.view;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
-import org.example.arkanoid_oop.view.Menu.MainMenu;
+import org.example.arkanoid_oop.view.Menu.LoadingMenu;
 
 public class Main extends Application {
 
@@ -10,36 +10,10 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
-        // Tạo menu chính
-        MainMenu menu = new MainMenu(stage);
-        menu.show();
+        // Bắt đầu bằng màn hình Loading
+        LoadingMenu loadingMenu = new LoadingMenu(stage);
+        loadingMenu.show();
     }
-
-    /*
-     @Override
-     public void start(Stage primaryStage) {
-
-
-        GamePane gamePane = GamePane.getInstance(SCREEN_WIDTH, SCREEN_HEIGHT);
-
-        // Tạo Scene và đặt GamePane làm nội dung chính
-        Scene scene = new Scene(gamePane, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-        // Gửi sự kiện nhấn/thả phím tới GamePane để xử lý
-        scene.setOnKeyPressed(event -> gamePane.handleKeyPressed(event.getCode()));
-        scene.setOnKeyReleased(event -> gamePane.handleKeyReleased(event.getCode()));
-
-        // Hiển thị cửa sổ
-        primaryStage.setTitle("Game Arkanoid (JavaFX)");
-        primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
-        primaryStage.show();
-
-        // Yêu cầu GamePane "focus" để nó có thể nhận sự kiện phím
-        gamePane.requestFocus();
-    }
-
-     */
 
     // Hàm main để khởi chạy ứng dụng
     public static void main(String[] args) {
