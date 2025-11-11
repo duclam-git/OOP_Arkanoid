@@ -25,7 +25,7 @@ public class OptionsMenu extends Menu {
     @Override
     public void show() {
         // --- ẢNH NỀN ---
-        Image bgImage = new Image(getClass().getResource("/images/mainMenu.png").toExternalForm());
+        Image bgImage = new Image(getClass().getResource("/images/concept.png").toExternalForm());
         ImageView bgView = new ImageView(bgImage);
         bgView.setFitWidth(SCREEN_WIDTH);
         bgView.setFitHeight(SCREEN_HEIGHT);

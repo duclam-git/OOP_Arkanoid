@@ -35,7 +35,7 @@ public class MainMenu extends Menu {
     @Override
     public void show() {
         // --- ẢNH NỀN ---
-        Image bgImage = new Image(getClass().getResource("/images/mainMenu.png").toExternalForm());
+        Image bgImage = new Image(getClass().getResource("/images/concept.png").toExternalForm());
         ImageView bgView = new ImageView(bgImage);
         bgView.setFitWidth(SCREEN_WIDTH);
         bgView.setFitHeight(SCREEN_HEIGHT);
@@ -213,7 +213,13 @@ public class MainMenu extends Menu {
         Button paddleDebugBtn = new Button();
         paddleDebugBtn.setGraphic(paddleView);
         paddleDebugBtn.setStyle("-fx-background-color: rgba(0, 0, 0, 0.7); -fx-border-color: yellow; -fx-border-width: 3; -fx-padding: 15;");
-        paddleDebugBtn.setOnAction(e -> audio.play("click"));
+
+        paddleDebugBtn.setOnAction(e -> {
+            audio.play("click");
+            // GỌI MÀN HÌNH CHỌN SKIN PADDLE MỚI
+            PaddleSkinMenu skinMenu = new PaddleSkinMenu(stage);
+            skinMenu.show();
+        });
 
         // Nút 2 (hình ball)
         ImageView ballView = new ImageView(ballImage);

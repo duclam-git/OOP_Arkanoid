@@ -95,7 +95,7 @@ public class GamePane extends Pane {
         background = new Background(screenWidth, screenHeight);
         getChildren().add(background);
 
-        paddle = new Paddle(screenWidth, screenHeight);
+        paddle = new Paddle(screenWidth, screenHeight, audio.getSettings().getPaddleSkinPath()); //
         getChildren().add(paddle);
 
         spawnInitialBall();
