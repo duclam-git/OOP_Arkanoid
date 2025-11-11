@@ -228,7 +228,13 @@ public class MainMenu extends Menu {
         Button ballDebugBtn = new Button();
         ballDebugBtn.setGraphic(ballView);
         ballDebugBtn.setStyle("-fx-background-color: rgba(0, 0, 0, 0.7); -fx-border-color: yellow; -fx-border-width: 3; -fx-padding: 15;");
-        ballDebugBtn.setOnAction(e -> audio.play("click"));
+
+        ballDebugBtn.setOnAction(e -> {
+            audio.play("click");
+            // GỌI MÀN HÌNH CHỌN SKIN BALL MỚI
+            BallSkinMenu ballMenu = new BallSkinMenu(stage);
+            ballMenu.show();
+        });
 
         // Đặt 2 nút vào HBox ở giữa màn hình
         HBox hbox = new HBox(50, paddleDebugBtn, ballDebugBtn);

@@ -34,7 +34,7 @@ public class AudioManager {
     private MediaPlayer gameMusic;
 
     private AudioManager() {
-        loadSettings(); // Tải settings trước khi preloadSounds
+        loadSettings();
         preloadSounds();
     }
 
@@ -59,27 +59,20 @@ public class AudioManager {
         loadClip("lose", "/sounds/lose.wav", 2);
         loadClip("tele", "/sounds/teleport.wav", 2);
         loadClip("click", "/sounds/click.wav", 2);
-        // "menu_music" và "game_bg" sẽ được quản lý bởi MediaPlayer riêng, không cần pool
+        loadClip("menu_music", "/sounds/menu_music.wav", 1); // vẫn dùng pool cho click nhạc ngắn, nhưng nhạc loop dùng MediaPlayer
+        loadClip("game_bg", "/sounds/game_bg.wav", 1);
     }
 
-    /** Load một loại âm thanh và tạo pool (Fix: Dùng getResourceAsStream) */
+    /** Load một loại âm thanh và tạo pool */
     private void loadClip(String name, String path, int poolSize) {
         List<AudioClip> list = new ArrayList<>();
         for (int i = 0; i < poolSize; i++) {
             try {
-                // SỬA: Kiểm tra null trước khi gọi toExternalForm
-                // HOẶC TỐT HƠN LÀ TRUYỀN THẲNG Stream cho AudioClip nếu nó hỗ trợ (nhưng AudioClip chỉ nhận URL)
-                // Vậy nên, chúng ta phải kiểm tra URL.
-                java.net.URL resourceUrl = getClass().getResource(path);
-                if (resourceUrl != null) {
-                    AudioClip clip = new AudioClip(resourceUrl.toExternalForm());
-                    clip.setVolume(0.8);
-                    list.add(clip);
-                } else {
-                    System.err.println("❌ Không tìm thấy resource âm thanh: " + path);
-                }
+                AudioClip clip = new AudioClip(getClass().getResource(path).toExternalForm());
+                clip.setVolume(0.8);
+                list.add(clip);
             } catch (Exception e) {
-                System.err.println("❌ Lỗi khi tải AudioClip " + path + ": " + e.getMessage());
+                System.err.println("❌ Không tải được âm thanh: " + path);
             }
         }
         clipPools.put(name, list);
@@ -89,10 +82,7 @@ public class AudioManager {
     public void play(String name) {
         if (!settings.isSoundEnabled()) return;
         List<AudioClip> list = clipPools.get(name);
-        if (list == null || list.isEmpty()) {
-            System.err.println("Cảnh báo: Không có âm thanh cho '" + name + "' hoặc pool rỗng.");
-            return;
-        }
+        if (list == null || list.isEmpty()) return;
 
         AudioClip clip = list.get(rand.nextInt(list.size()));
         clip.play();
@@ -102,22 +92,12 @@ public class AudioManager {
     // NHẠC NỀN MENU
     // ============================
     public void playMenuMusic() {
-        if (!settings.isSoundEnabled()) return; // Kiểm tra enable trước
         stopMenuMusic(); // dừng nhạc cũ nếu có
-        try {
-            java.net.URL resourceUrl = getClass().getResource("/sounds/menu_music.wav");
-            if (resourceUrl != null) {
-                Media media = new Media(resourceUrl.toExternalForm());
-                menuMusic = new MediaPlayer(media);
-                menuMusic.setCycleCount(MediaPlayer.INDEFINITE); // loop vô hạn
-                menuMusic.setVolume(0.5);
-                menuMusic.play();
-            } else {
-                System.err.println("❌ Không tìm thấy nhạc nền menu: /sounds/menu_music.wav");
-            }
-        } catch (Exception e) {
-            System.err.println("❌ Lỗi khi phát nhạc nền menu: " + e.getMessage());
-        }
+        Media media = new Media(getClass().getResource("/sounds/menu_music.wav").toExternalForm());
+        menuMusic = new MediaPlayer(media);
+        menuMusic.setCycleCount(MediaPlayer.INDEFINITE); // loop vô hạn
+        menuMusic.setVolume(0.5);
+        menuMusic.play();
     }
 
     public void stopMenuMusic() {
@@ -132,22 +112,12 @@ public class AudioManager {
     // NHẠC NỀN GAME
     // ============================
     public void playGameMusic() {
-        if (!settings.isSoundEnabled()) return; // Kiểm tra enable trước
         stopGameMusic();
-        try {
-            java.net.URL resourceUrl = getClass().getResource("/sounds/game_bg.wav");
-            if (resourceUrl != null) {
-                Media media = new Media(resourceUrl.toExternalForm());
-                gameMusic = new MediaPlayer(media);
-                gameMusic.setCycleCount(MediaPlayer.INDEFINITE);
-                gameMusic.setVolume(0.5);
-                gameMusic.play();
-            } else {
-                System.err.println("❌ Không tìm thấy nhạc nền game: /sounds/game_bg.wav");
-            }
-        } catch (Exception e) {
-            System.err.println("❌ Lỗi khi phát nhạc nền game: " + e.getMessage());
-        }
+        Media media = new Media(getClass().getResource("/sounds/game_bg.wav").toExternalForm());
+        gameMusic = new MediaPlayer(media);
+        gameMusic.setCycleCount(MediaPlayer.INDEFINITE);
+        gameMusic.setVolume(0.5);
+        gameMusic.play();
     }
 
     public void stopGameMusic() {
@@ -157,16 +127,12 @@ public class AudioManager {
             gameMusic = null;
         }
     }
-
     public void setSoundEnabled(boolean enabled) {
         settings.setSoundEnabled(enabled);
         saveSettings();
         if (!enabled) {
             stopMenuMusic();
             stopGameMusic();
-        } else {
-            // Nếu bật âm thanh lại, bạn có thể muốn tự động chơi lại nhạc nền tương ứng
-            // Hiện tại chưa có logic để biết nhạc nào đang chạy, có thể bổ sung sau
         }
     }
 
@@ -179,56 +145,38 @@ public class AudioManager {
     // ============================
 
     /** Tải settings từ file. Nếu thất bại, dùng settings mặc định. */
-    private void loadSettings() {
+    public void loadSettings() {
         try (
                 FileInputStream fileIn = new FileInputStream(SETTINGS_FILE);
                 ObjectInputStream objectIn = new ObjectInputStream(fileIn)
         ) {
             settings = (GameSettings) objectIn.readObject();
-
-            // THÊM LOGIC KIỂM TRA PADDLE SKIN PATH SAU KHI TẢI
-            if (settings.getPaddleSkinPath() == null || !isValidSkinPath(settings.getPaddleSkinPath())) {
-                System.out.println("Cảnh báo: paddleSkinPath không hợp lệ hoặc null trong settings. Đặt lại mặc định.");
-                settings.setPaddleSkinPath("/images/paddle.png"); // Đặt lại mặc định hợp lệ
-                saveSettings(); // Lưu lại cài đặt đã sửa
-            }
-
             // Nếu tải thành công, cần áp dụng trạng thái âm thanh ngay lập tức
             if (!settings.isSoundEnabled()) {
-                stopMenuMusic(); // Đảm bảo đã dừng nhạc nếu âm thanh bị tắt
+                stopMenuMusic();
                 stopGameMusic();
             }
+            System.out.println("Tải settings thành công.");
         } catch (FileNotFoundException e) {
-            System.out.println("File settings không tồn tại. Tạo settings mới.");
+            System.out.println("File settings không tồn tại.");
             settings = new GameSettings();
-            saveSettings(); // Lưu cài đặt mới
         } catch (Exception e) {
-            System.err.println("Lỗi khi tải settings: " + e.getMessage() + ". Tạo settings mới.");
+            System.err.println("Lỗi khi tải settings: " + e.getMessage());
             settings = new GameSettings();
-            saveSettings(); // Lưu cài đặt mới
-        }
-    }
-
-    // Phương thức kiểm tra đường dẫn skin có hợp lệ không
-    private boolean isValidSkinPath(String path) {
-        try {
-            return getClass().getResource(path) != null; // Chỉ cần kiểm tra resource có tồn tại không
-        } catch (Exception e) {
-            System.err.println("Lỗi khi kiểm tra đường dẫn skin " + path + ": " + e.getMessage());
-            return false;
         }
     }
 
     /** Lưu settings hiện tại ra file. */
-    void saveSettings() {
+    public void saveSettings() {
         try (
                 FileOutputStream fileOut = new FileOutputStream(SETTINGS_FILE);
                 ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)
         ) {
             objectOut.writeObject(settings);
-            // System.out.println("Lưu settings thành công."); // Có thể bỏ comment này khi debug xong
+            System.out.println("Lưu settings thành công.");
         } catch (IOException e) {
             System.err.println("Lỗi khi lưu settings: " + e.getMessage());
         }
     }
 }
+
