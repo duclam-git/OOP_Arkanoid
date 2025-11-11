@@ -20,7 +20,7 @@ public class MainMenu extends Menu {
     private Button debugButton;     // Nút chuyển sang Debug Menu
 
     // Các thành phần Menu Debug
-    private HBox debugMenuBox; // Chứa 2 nút Debug lớn ở giữa
+    private HBox debugMenuBox; // Chứa 2 nút icon lớn, giữa màn hình
     private Button backButton; // Nút quay lại Menu chính
 
     private Image paddleImage;
@@ -79,8 +79,11 @@ public class MainMenu extends Menu {
         // --- SỰ KIỆN NÚT CHÍNH ---
         VBox mainButtonsBox = (VBox)menuBoxContainer.getChildren().get(1);
         Button startBtn = (Button)mainButtonsBox.getChildren().get(0);
-        Button optionsBtn = (Button)mainButtonsBox.getChildren().get(1);
-        Button exitBtn = (Button)mainButtonsBox.getChildren().get(2);
+        // NEW Button (index 1)
+        Button scoresBtn = (Button)mainButtonsBox.getChildren().get(1);
+        Button optionsBtn = (Button)mainButtonsBox.getChildren().get(2);
+        Button exitBtn = (Button)mainButtonsBox.getChildren().get(3);
+
 
         startBtn.setOnAction(e -> {
             audio.play("click");
@@ -103,6 +106,14 @@ public class MainMenu extends Menu {
             stage.show();
             gamePane.requestFocus();
         });
+
+        // NEW ACTION for Scores Button
+        scoresBtn.setOnAction(e -> {
+            audio.play("click");
+            HighScoreMenu menu = new HighScoreMenu(stage);
+            menu.show();
+        });
+
 
         optionsBtn.setOnAction(e -> {
             audio.play("click");
@@ -158,10 +169,13 @@ public class MainMenu extends Menu {
 
         // --- NÚT CHÍNH ---
         Button startBtn = new Button("START");
+        // NEW Button
+        Button scoresBtn = new Button("HIGH SCORES");
         Button optionsBtn = new Button("OPTIONS");
         Button exitBtn = new Button("EXIT");
 
-        for (Button btn : new Button[]{startBtn, optionsBtn, exitBtn}) {
+        // MODIFIED: Added scoresBtn to the list of buttons to style
+        for (Button btn : new Button[]{startBtn, scoresBtn, optionsBtn, exitBtn}) {
             btn.setPrefWidth(200);
             btn.setFont(Font.font("Orbitron", 20));
             btn.setStyle("""
@@ -181,7 +195,8 @@ public class MainMenu extends Menu {
         }
 
         // --- MENU BOX ---
-        VBox mainButtonsBox = new VBox(20, startBtn, optionsBtn, exitBtn);
+        // MODIFIED: Added scoresBtn to the VBox
+        VBox mainButtonsBox = new VBox(20, startBtn, scoresBtn, optionsBtn, exitBtn);
         mainButtonsBox.setAlignment(Pos.CENTER);
 
         VBox menuBox = new VBox(20, title, mainButtonsBox);
@@ -234,7 +249,7 @@ public class MainMenu extends Menu {
         ballDebugBtn.setOnAction(e -> {
             audio.play("click");
             // GỌI MÀN HÌNH CHỌN SKIN BALL MỚI
-            BallSkinMenu ballMenu = new BallSkinMenu(stage);
+            org.example.arkanoid_oop.BallSkinMenu ballMenu = new org.example.arkanoid_oop.BallSkinMenu(stage);
             ballMenu.show();
         });
 

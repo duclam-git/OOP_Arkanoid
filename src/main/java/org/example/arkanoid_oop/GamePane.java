@@ -20,6 +20,7 @@ import org.example.arkanoid_oop.Entities.*;
 import org.example.arkanoid_oop.Manager.BallTrailManager;
 import org.example.arkanoid_oop.Brick.Impervious_brick;
 import org.example.arkanoid_oop.Manager.AudioManager;
+import org.example.arkanoid_oop.Menu.HighScoreMenu;
 import org.example.arkanoid_oop.Menu.MainMenu;
 
 import java.io.File;
@@ -30,18 +31,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Collections;
 
 import static org.example.arkanoid_oop.Brick.Brick.BRICK_HEIGHT;
 import static org.example.arkanoid_oop.Brick.Brick.BRICK_WIDTH;
 
-/**
- * GamePane là màn chơi chính, chứa tất cả các đối tượng game
- * và quản lý vòng lặp (game loop) chính.
- */
 public class GamePane extends Pane {
-
-    // (Các biến của bạn giữ nguyên)
-    private static final String HIGH_SCORE_FILE = "highscore.txt";
     private static GamePane instance;
     private Stage stage;
     private double screenWidth, screenHeight;
@@ -84,10 +79,8 @@ public class GamePane extends Pane {
     private boolean isPaused = false;
     private VBox pauseOverlay;
 
-    // --- (MỚI) Thêm các biến cho hiệu ứng đuôi ---
-    private BallTrailManager ballTrailManager; // Đối tượng quản lý đuôi
-    private long frameCount = 0; // Bộ đếm khung hình
-    // ---------------------------------------------
+    private BallTrailManager ballTrailManager;
+    private long frameCount = 0;
 
     private GamePane(double width, double height, Stage stage) {
         this.screenWidth = width;
@@ -96,7 +89,7 @@ public class GamePane extends Pane {
 
         setPrefSize(screenWidth, screenHeight);
         audio = AudioManager.getInstance();
-        loadHighScore();
+        loadHighScoreForHUD();
 
         // Khởi tạo các đối tượng game
         background = new Background(screenWidth, screenHeight);
@@ -138,6 +131,11 @@ public class GamePane extends Pane {
             }
         };
         gameLoop.start();
+    }
+
+    private void loadHighScoreForHUD() {
+        List<Integer> scores = HighScoreMenu.loadHighScores();
+        this.highscore = scores.isEmpty() ? 0 : scores.get(0);
     }
 
     private void updateBallStuckToPaddle() {
@@ -263,7 +261,9 @@ public class GamePane extends Pane {
         levelText = new Text("Level: " + level);
         levelText.setFont(Font.font("Arial", 20)); levelText.setFill(Color.WHITE);
         levelText.setLayoutX(screenWidth / 2 - 120); levelText.setLayoutY(30);
+
         highscoreText = new Text("High Score: " + highscore);
+
         highscoreText.setFont(Font.font("Arial", 20)); highscoreText.setFill(Color.WHITE);
         highscoreText.setLayoutX(screenWidth / 2 + 20); highscoreText.setLayoutY(30);
         messageText = new Text("Press SPACE to Start");
@@ -274,13 +274,6 @@ public class GamePane extends Pane {
     }
 
     private void createPauseOverlay() {
-        if (backdrop == null) {
-            backdrop = new Rectangle(screenWidth, screenHeight, Color.BLACK);
-            backdrop.setOpacity(0.7);
-            backdrop.setVisible(false);
-            getChildren().add(backdrop);
-        }
-
         Text pauseTitle = new Text("PAUSED");
         pauseTitle.setFont(Font.font("Orbitron", 50));
         pauseTitle.setFill(Color.YELLOW);
@@ -347,7 +340,10 @@ public class GamePane extends Pane {
 
     private void createGameOverOverlay() {
         backdrop = new Rectangle(screenWidth, screenHeight, Color.BLACK);
-        backdrop.setOpacity(0.7); backdrop.setVisible(false);
+        backdrop.setOpacity(0.7);
+        backdrop.setVisible(false);
+        getChildren().add(backdrop);
+
         Text gameOverTitle = new Text("GAME OVER");
         gameOverTitle.setFont(Font.font("Orbitron", 50)); gameOverTitle.setFill(Color.RED);
         Text finalScoreText = new Text("Final Score: 0");
@@ -356,57 +352,88 @@ public class GamePane extends Pane {
         highscoreNotice.setFont(Font.font("Arial", 20));
         highscoreNotice.setFill(Color.YELLOW);
         highscoreNotice.setId("highscoreNotice");
-        Button restartBtn = new Button("RESTART");
+
+        Button scoresBtn = new Button("RESTART");
         Button quitBtn = new Button("QUIT");
-        for (Button btn : new Button[]{restartBtn, quitBtn}) {
-            btn.setPrefWidth(150);
+
+        for (Button btn : new Button[]{scoresBtn, quitBtn}) {
+            btn.setPrefWidth(250);
             btn.setFont(Font.font("Orbitron", 18));
             btn.setStyle("-fx-background-color: #00ffff; -fx-text-fill: black; -fx-border-color: #00ffff; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;");
             btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-border-color: white; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;"));
             btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: #00ffff; -fx-text-fill: black; -fx-border-color: #00ffff; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;"));
         }
-        quitBtn.setOnAction(e -> {
-            audio.play("click");
-            gameLoop.stop();
-            audio.stopGameMusic();
-            MainMenu menu = new MainMenu(stage);
-            menu.show();
-        });
-        restartBtn.setOnAction(e -> {
-            audio.play("click");
-            restartGame();
-        });
-        VBox buttonBox = new VBox(10, restartBtn, quitBtn);
+
+        VBox buttonBox = new VBox(10, scoresBtn, quitBtn);
         buttonBox.setAlignment(Pos.CENTER);
         gameOverOverlay = new VBox(20, gameOverTitle, finalScoreText, highscoreNotice, buttonBox);
         gameOverOverlay.setAlignment(Pos.CENTER);
         gameOverOverlay.setPrefSize(screenWidth, screenHeight);
-        getChildren().add(backdrop);
+
         getChildren().add(gameOverOverlay);
+
         backdrop.toFront();
         gameOverOverlay.toFront();
         gameOverOverlay.setVisible(false);
     }
+
     public void showGameOverScreen() {
         gameRunning = false;
         audio.stopGameMusic();
         audio.play("game_over");
         gameLoop.stop();
+
+        boolean isNewTop = HighScoreMenu.updateHighScores(score);
+        loadHighScoreForHUD();
+        highscoreText.setText("High Score: " + highscore);
+
         Text finalScoreText = (Text) gameOverOverlay.getChildren().get(1);
         Text highscoreNotice = (Text) gameOverOverlay.lookup("#highscoreNotice");
         finalScoreText.setText("Final Score: " + score);
         highscoreNotice.setText("");
-        if (score > highscore) {
-            highscore = score;
-            highscoreText.setText("High Score: " + highscore);
-            saveHighScore();
-            highscoreNotice.setText("NEW HIGH SCORE!");
+
+        List<Integer> currentHighScores = HighScoreMenu.loadHighScores();
+        boolean madeTopList = currentHighScores.contains(score);
+
+        if (isNewTop) {
+            highscoreNotice.setText("NEW TOP SCORE!");
+        } else if (madeTopList) {
+            int rank = currentHighScores.indexOf(score) + 1;
+            highscoreNotice.setText("NEW HIGH SCORE (RANK " + rank + ")!");
         }
+
         for (Node node : getChildren()) {
-            if (node != background && node != backdrop && node != gameOverOverlay) {
+            if (node != background && node != backdrop && node != gameOverOverlay && node != pauseOverlay) {
                 node.setVisible(false);
             }
         }
+
+        VBox buttonBox = (VBox) gameOverOverlay.getChildren().get(3);
+        Button scoresBtn = (Button) buttonBox.getChildren().get(0);
+        Button quitBtn = (Button) buttonBox.getChildren().get(1);
+
+        scoresBtn.setText("VIEW SCORES");
+        quitBtn.setText("QUIT TO MENU");
+
+        scoresBtn.setOnAction(e -> {
+            audio.play("click");
+            gameOverOverlay.setVisible(false);
+            backdrop.setVisible(false);
+
+            GamePane.resetInstance();
+            HighScoreMenu menu = new HighScoreMenu(stage);
+            menu.show();
+        });
+
+        quitBtn.setOnAction(e -> {
+            audio.play("click");
+            gameLoop.stop();
+            audio.stopGameMusic();
+            GamePane.resetInstance();
+            MainMenu menu = new MainMenu(stage);
+            menu.show();
+        });
+
         backdrop.setVisible(true);
         gameOverOverlay.setVisible(true);
         gameOverOverlay.toFront();
@@ -426,6 +453,26 @@ public class GamePane extends Pane {
 
         resetGame();
 
+        VBox buttonBox = (VBox) gameOverOverlay.getChildren().get(3);
+        Button restartBtn = (Button) buttonBox.getChildren().get(0);
+        Button quitBtn = (Button) buttonBox.getChildren().get(1);
+
+        restartBtn.setText("RESTART");
+        quitBtn.setText("QUIT");
+
+        restartBtn.setOnAction(e -> {
+            audio.play("click");
+            restartGame();
+        });
+        quitBtn.setOnAction(e -> {
+            audio.play("click");
+            gameLoop.stop();
+            audio.stopGameMusic();
+            MainMenu menu = new MainMenu(stage);
+            menu.show();
+        });
+
+
         if (audio.isSoundEnabled()) audio.playGameMusic();
         gameRunning = false;
         isPaused = false;
@@ -433,9 +480,73 @@ public class GamePane extends Pane {
         gameLoop.start();
     }
 
-    /**
-     * (CẬP NHẬT) Vòng lặp game chính, gọi spawnTrail
-     */
+    private double generateRandom(double min, double max) {
+        return min + (rand.nextDouble() * (max - min));
+    }
+
+    private void resetGame() {
+        lives = 3;
+        for (ImageView icon : heartIcons) {
+            icon.setVisible(true);
+        }
+
+        score = 0;
+        scoreText.setText("Score: 0");
+        level = 1;
+        levelText.setText("Level: " + level);
+        isLaserActive = false;
+        for (Laser laser : lasers) getChildren().remove(laser);
+        lasers.clear();
+        if (isDoublePaddleActive) {
+            paddle.setNormalLength();
+            isDoublePaddleActive = false;
+        }
+        isShieldActive = false;
+        shieldBar.setVisible(false);
+        paddle.reset();
+
+        ballTrailManager.clear();
+
+        removeAndRespawnBall();
+        for (Brick brick : bricks) getChildren().remove(brick.getView());
+        bricks.clear();
+        for (Powerup powerup : powerups) getChildren().remove(powerup);
+        powerups.clear();
+        createBricks();
+        for (Brick brick : bricks) {
+            getChildren().add(brick.getView());
+        }
+
+        createTeleporters();
+
+        loadHighScoreForHUD();
+        highscoreText.setText("High Score: " + highscore);
+
+        VBox buttonBox = (VBox) gameOverOverlay.getChildren().get(3);
+        Button restartBtn = (Button) buttonBox.getChildren().get(0);
+        Button quitBtn = (Button) buttonBox.getChildren().get(1);
+
+        restartBtn.setText("RESTART");
+        quitBtn.setText("QUIT");
+
+        restartBtn.setOnAction(e -> {
+            audio.play("click");
+            restartGame();
+        });
+        quitBtn.setOnAction(e -> {
+            audio.play("click");
+            gameLoop.stop();
+            audio.stopGameMusic();
+            MainMenu menu = new MainMenu(stage);
+            menu.show();
+        });
+
+        messageText.setText("Press SPACE to Start");
+        messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
+        messageText.setVisible(true);
+        gameRunning = false;
+    }
+
     private void updateGame(long now) {
         updatePowerups();
         if (isDoublePaddleActive && now > doublePaddleEndTime) {
@@ -453,9 +564,6 @@ public class GamePane extends Pane {
         }
         checkCollisions(now);
     }
-
-    // (Các hàm updateLasers, shootLasers, updatePowerups, removeAndRespawnBall, startNextLevel, checkCollisions, spawnPowerup, activatePowerup, spawnMultiBall, explode... giữ nguyên)
-    // ... (Giữ nguyên các hàm này) ...
     private void updateLasers(long now) {
         if (isLaserActive && now > laserEndTime) {
             isLaserActive = false;
@@ -529,7 +637,7 @@ public class GamePane extends Pane {
         removeAndRespawnBall();
         paddle.reset();
 
-        ballTrailManager.clear(); // (MỚI) Xóa đuôi cũ
+        ballTrailManager.clear();
 
         createBricks();
         for (Brick brick : bricks) {
@@ -615,7 +723,6 @@ public class GamePane extends Pane {
         }
         if (balls.isEmpty() && bricksHitByLaser.isEmpty()) return;
         // Ball - Brick
-        List<Brick> bricksToExplode = new ArrayList<>();
         ballIt = new ArrayList<>(balls).iterator();
         while (ballIt.hasNext()) {
             Ball ball = ballIt.next();
@@ -647,7 +754,7 @@ public class GamePane extends Pane {
                         getChildren().remove(brickView);
                         score += brick.getScoreValue();
                         if (brick instanceof Explosive_brick) {
-                            bricksToExplode.add(brick);
+                            explode((Explosive_brick) brick);
                         }
                         if (brick instanceof Powerup_brick) {
                             spawnPowerup((Powerup_brick) brick);
@@ -673,19 +780,10 @@ public class GamePane extends Pane {
                 getChildren().remove(brick.getView());
                 score += brick.getScoreValue();
                 if (brick instanceof Explosive_brick) {
-                    bricksToExplode.add(brick);
+                    explode((Explosive_brick) brick);
                 }
                 if (brick instanceof Powerup_brick) {
                     spawnPowerup((Powerup_brick) brick);
-                }
-            }
-            scoreText.setText("Score: " + score);
-        }
-        if (!bricksToExplode.isEmpty()) {
-            for (Brick explosiveBrick : bricksToExplode) {
-                if (explosiveBrick instanceof Explosive_brick) {
-                    audio.play("explosion");
-                    explode((Explosive_brick) explosiveBrick);
                 }
             }
             scoreText.setText("Score: " + score);
@@ -749,7 +847,6 @@ public class GamePane extends Pane {
     }
 
 
-    // (THAY THẾ TOÀN BỘ PHƯƠNG THỨC NÀY)
     private void explode(Explosive_brick sourceExplosiveBrick) {
         int explosionRadius = 3;
         Rectangle explosionArea = new Rectangle((int)sourceExplosiveBrick.getX() - BRICK_WIDTH * (explosionRadius / 2),
@@ -764,12 +861,9 @@ public class GamePane extends Pane {
         }
         for (Brick brick : bricksToRemove) {
 
-            // --- (SỬA LỖI GẠCH NỔ) ---
-            // Thêm kiểm tra: Nếu gạch là Impervious, bỏ qua (không phá hủy)
             if (brick instanceof Impervious_brick) {
-                continue; // Chuyển sang gạch tiếp theo trong vòng lặp
+                continue;
             }
-            // --- (HẾT SỬA) ---
 
             if (bricks.contains(brick)) {
                 if (brick instanceof Hard_brick) {
@@ -780,7 +874,6 @@ public class GamePane extends Pane {
                         score += brick.getScoreValue();
                     }
                 } else {
-                    // Logic này bây giờ đã an toàn, vì Impervious_brick đã bị bỏ qua
                     bricks.remove(brick);
                     getChildren().remove(brick.getView());
                     score += brick.getScoreValue();
@@ -795,9 +888,6 @@ public class GamePane extends Pane {
         }
     }
 
-    /**
-     * (CẬP NHẬT) Sửa lại logic mất mạng
-     */
     private void loseLife() {
         lives--;
         if (lives >= 0 && lives < heartIcons.size()) {
@@ -815,14 +905,12 @@ public class GamePane extends Pane {
         isShieldActive = false;
         shieldBar.setVisible(false);
 
-        // (MỚI) Xóa đuôi cũ
         ballTrailManager.clear();
 
         if (lives > 0) {
-            paddle.reset(); // Reset Paddle về giữa
+            paddle.reset();
         }
 
-        // Xóa bóng cũ và spawn bóng mới
         removeAndRespawnBall();
 
         if (lives <= 0) {
@@ -834,60 +922,9 @@ public class GamePane extends Pane {
         }
     }
 
-    // (Hàm generateRandom() giữ nguyên)
-    private double generateRandom(double min, double max) {
-        return min + (rand.nextDouble() * (max - min));
-    }
-
-    /**
-     * (CẬP NHẬT) Sửa lại logic reset
-     */
-    private void resetGame() {
-        lives = 3;
-        for (ImageView icon : heartIcons) {
-            icon.setVisible(true);
-        }
-
-        score = 0;
-        scoreText.setText("Score: 0");
-        level = 1;
-        levelText.setText("Level: " + level);
-        isLaserActive = false;
-        for (Laser laser : lasers) getChildren().remove(laser);
-        lasers.clear();
-        if (isDoublePaddleActive) {
-            paddle.setNormalLength();
-            isDoublePaddleActive = false;
-        }
-        isShieldActive = false;
-        shieldBar.setVisible(false);
-        paddle.reset();
-
-        // (MỚI) Xóa đuôi cũ
-        ballTrailManager.clear();
-
-        removeAndRespawnBall();
-        for (Brick brick : bricks) getChildren().remove(brick.getView());
-        bricks.clear();
-        for (Powerup powerup : powerups) getChildren().remove(powerup);
-        powerups.clear();
-        createBricks();
-        for (Brick brick : bricks) {
-            getChildren().add(brick.getView());
-        }
-
-        createTeleporters();
-
-        messageText.setText("Press SPACE to Start");
-        messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
-        messageText.setVisible(true);
-        gameRunning = false;
-    }
-
-    // (Hàm loadHighScore(), saveHighScore() giữ nguyên)
     private void loadHighScore() {
         try {
-            File file = new File(HIGH_SCORE_FILE);
+            File file = new File("highscore.txt");
             if (file.exists()) {
                 Scanner scanner = new Scanner(file);
                 if (scanner.hasNextInt()) {
@@ -898,16 +935,6 @@ public class GamePane extends Pane {
         } catch (FileNotFoundException e) {
         } catch (Exception e) {
             System.out.println("Lỗi: Không thể tải highscore.");
-            e.printStackTrace();
-        }
-    }
-    private void saveHighScore() {
-        try {
-            PrintWriter writer = new PrintWriter(HIGH_SCORE_FILE);
-            writer.print(this.highscore);
-            writer.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("Lỗi: Không thể lưu highscore.");
             e.printStackTrace();
         }
     }
