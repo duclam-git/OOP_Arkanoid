@@ -17,7 +17,8 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import org.example.arkanoid_oop.Brick.*;
 import org.example.arkanoid_oop.Entities.*;
-import org.example.arkanoid_oop.Entities.BallTrailManager; // (MỚI) Import lớp hiệu ứng
+import org.example.arkanoid_oop.Entities.BallTrailManager;
+import org.example.arkanoid_oop.Brick.Impervious_brick;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -199,10 +200,28 @@ public class GamePane extends Pane {
                 double y = offsetTop + r * (BRICK_HEIGHT + padding);
                 Brick brick = null;
                 double chance = rand.nextDouble();
-                if (chance < 0.1) brick = new Explosive_brick(x, y);
-                else if (chance < 0.25) brick = new Powerup_brick(x, y);
-                else if (chance < 0.45) brick = new Hard_brick(x, y);
-                else brick = new Normal_brick(x, y);
+
+                // 10% cơ hội cho gạch không thể phá hủy (chỉ từ màn 2 trở đi)
+                if (chance < 0.1) {
+                    brick = new Impervious_brick(x, y);
+                }
+                // 10% gạch nổ (0.1 -> 0.2)
+                else if (chance < 0.2) {
+                    brick = new Explosive_brick(x, y);
+                }
+                // 15% gạch powerup (0.2 -> 0.35)
+                else if (chance < 0.35) {
+                    brick = new Powerup_brick(x, y);
+                }
+                // 20% gạch cứng (0.35 -> 0.55)
+                else if (chance < 0.55) {
+                    brick = new Hard_brick(x, y);
+                }
+                // 45% gạch thường
+                else {
+                    brick = new Normal_brick(x, y);
+                }
+
                 bricks.add(brick);
             }
         }
@@ -460,6 +479,7 @@ public class GamePane extends Pane {
         messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
         messageText.setVisible(true);
     }
+    // (THAY THẾ TOÀN BỘ PHƯƠNG THỨC NÀY)
     private void checkCollisions(long now) {
         Iterator<Ball> ballIt = new ArrayList<>(balls).iterator();
         while (ballIt.hasNext()) {
@@ -599,6 +619,7 @@ public class GamePane extends Pane {
             startNextLevel();
         }
     }
+
     private void spawnPowerup(Powerup_brick brick) {
         double chance = rand.nextDouble();
         if (chance <= 0.5) {
@@ -650,7 +671,9 @@ public class GamePane extends Pane {
         balls.addAll(newBalls);
         getChildren().addAll(newBalls);
     }
-    // (Hàm explode() giữ nguyên)
+
+
+    // (THAY THẾ TOÀN BỘ PHƯƠNG THỨC NÀY)
     private void explode(Explosive_brick sourceExplosiveBrick) {
         int explosionRadius = 3;
         Rectangle explosionArea = new Rectangle((int)sourceExplosiveBrick.getX() - BRICK_WIDTH * (explosionRadius / 2),
@@ -664,6 +687,14 @@ public class GamePane extends Pane {
             }
         }
         for (Brick brick : bricksToRemove) {
+
+            // --- (SỬA LỖI GẠCH NỔ) ---
+            // Thêm kiểm tra: Nếu gạch là Impervious, bỏ qua (không phá hủy)
+            if (brick instanceof Impervious_brick) {
+                continue; // Chuyển sang gạch tiếp theo trong vòng lặp
+            }
+            // --- (HẾT SỬA) ---
+
             if (bricks.contains(brick)) {
                 if (brick instanceof Hard_brick) {
                     boolean wasDestroyed = brick.onHit();
@@ -673,6 +704,7 @@ public class GamePane extends Pane {
                         score += brick.getScoreValue();
                     }
                 } else {
+                    // Logic này bây giờ đã an toàn, vì Impervious_brick đã bị bỏ qua
                     bricks.remove(brick);
                     getChildren().remove(brick.getView());
                     score += brick.getScoreValue();
@@ -686,7 +718,6 @@ public class GamePane extends Pane {
             }
         }
     }
-
 
     /**
      * (CẬP NHẬT) Sửa lại logic mất mạng
