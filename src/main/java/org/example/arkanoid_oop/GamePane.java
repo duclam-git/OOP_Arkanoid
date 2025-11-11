@@ -479,8 +479,9 @@ public class GamePane extends Pane {
         messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
         messageText.setVisible(true);
     }
-    // (THAY THẾ TOÀN BỘ PHƯƠNG THỨC NÀY)
+
     private void checkCollisions(long now) {
+        // Ball - Paddle
         Iterator<Ball> ballIt = new ArrayList<>(balls).iterator();
         while (ballIt.hasNext()) {
             Ball ball = ballIt.next();
@@ -499,6 +500,7 @@ public class GamePane extends Pane {
                     ball.setDirection(newDx, newDy);
                 }
             }
+            // Ball - Border
             if (ball.getLayoutY() >= screenHeight) {
                 if (isShieldActive) {
                     isShieldActive = false;
@@ -517,6 +519,7 @@ public class GamePane extends Pane {
                 }
             }
         }
+        // Ball - Teleporters
         for (Ball ball : balls) {
             for (Teleporter teleporter : teleporters) {
                 if (ball.getBoundsInParent().intersects(teleporter.getBoundsInParent()) && !teleporter.isOnCooldown(now)) {
@@ -526,6 +529,7 @@ public class GamePane extends Pane {
                 }
             }
         }
+        // Brick - Laser
         List<Brick> bricksHitByLaser = new ArrayList<>();
         Iterator<Laser> laserIt = lasers.iterator();
         while (laserIt.hasNext()) {
@@ -548,6 +552,7 @@ public class GamePane extends Pane {
             }
         }
         if (balls.isEmpty() && bricksHitByLaser.isEmpty()) return;
+        // Ball - Brick
         List<Brick> bricksToExplode = new ArrayList<>();
         ballIt = new ArrayList<>(balls).iterator();
         while (ballIt.hasNext()) {
@@ -567,13 +572,14 @@ public class GamePane extends Pane {
                     double maxOverlapY = Math.min(ballBounds.getMaxY(), brickBounds.getMaxY());
                     double overlapWidth = maxOverlapX - overlapX;
                     double overlapHeight = maxOverlapY - overlapY;
-                    boolean wasDestroyed = brick.onHit();
-                    audio.play("brick");
+
                     if (overlapWidth < overlapHeight) {
                         ball.reverseDx();
                     } else {
                         ball.reverseDy();
                     }
+                    boolean wasDestroyed = brick.onHit();
+                    audio.play("brick");
                     if (wasDestroyed) {
                         brickIt.remove();
                         getChildren().remove(brickView);
@@ -584,6 +590,14 @@ public class GamePane extends Pane {
                         if (brick instanceof Powerup_brick) {
                             spawnPowerup((Powerup_brick) brick);
                             audio.play("powerup_spawn");
+                        }
+                    } else {
+                        if (overlapWidth < overlapHeight) {
+                            double push = (ballBounds.getCenterX() < brickBounds.getCenterX()) ? -(overlapWidth + 1) : (overlapWidth + 1);
+                            ball.setLayoutX(ball.getLayoutX() + push);
+                        } else {
+                            double push = (ballBounds.getCenterY() < brickBounds.getCenterY()) ? -(overlapHeight + 1) : (overlapHeight + 1);
+                            ball.setLayoutY(ball.getLayoutY() + push);
                         }
                     }
                     scoreText.setText("Score: " + score);
