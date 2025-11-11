@@ -79,10 +79,11 @@ public class MainMenu extends Menu {
         // --- SỰ KIỆN NÚT CHÍNH ---
         VBox mainButtonsBox = (VBox)menuBoxContainer.getChildren().get(1);
         Button startBtn = (Button)mainButtonsBox.getChildren().get(0);
-        // NEW Button (index 1)
-        Button scoresBtn = (Button)mainButtonsBox.getChildren().get(1);
-        Button optionsBtn = (Button)mainButtonsBox.getChildren().get(2);
-        Button exitBtn = (Button)mainButtonsBox.getChildren().get(3);
+// NEW: Mode Button
+        Button modeBtn = (Button)mainButtonsBox.getChildren().get(1);
+        Button scoresBtn = (Button)mainButtonsBox.getChildren().get(2);
+        Button optionsBtn = (Button)mainButtonsBox.getChildren().get(3);
+        Button exitBtn = (Button)mainButtonsBox.getChildren().get(4);
 
 
         startBtn.setOnAction(e -> {
@@ -105,6 +106,13 @@ public class MainMenu extends Menu {
             stage.setResizable(false);
             stage.show();
             gamePane.requestFocus();
+        });
+
+        // NEW ACTION for Mode Button
+        modeBtn.setOnAction(e -> {
+            audio.play("click");
+            ModeSelectionMenu modeMenu = new ModeSelectionMenu(stage); // GỌI MENU MỚI
+            modeMenu.show();
         });
 
         // NEW ACTION for Scores Button
@@ -169,13 +177,13 @@ public class MainMenu extends Menu {
 
         // --- NÚT CHÍNH ---
         Button startBtn = new Button("START");
-        // NEW Button
+        Button modeBtn = new Button("MODE");
         Button scoresBtn = new Button("HIGH SCORES");
         Button optionsBtn = new Button("OPTIONS");
         Button exitBtn = new Button("EXIT");
 
         // MODIFIED: Added scoresBtn to the list of buttons to style
-        for (Button btn : new Button[]{startBtn, scoresBtn, optionsBtn, exitBtn}) {
+        for (Button btn : new Button[]{startBtn, scoresBtn, optionsBtn, exitBtn, modeBtn}) {
             btn.setPrefWidth(200);
             btn.setFont(Font.font("Orbitron", 20));
             btn.setStyle("""
@@ -196,7 +204,7 @@ public class MainMenu extends Menu {
 
         // --- MENU BOX ---
         // MODIFIED: Added scoresBtn to the VBox
-        VBox mainButtonsBox = new VBox(20, startBtn, scoresBtn, optionsBtn, exitBtn);
+        VBox mainButtonsBox = new VBox(20, startBtn, modeBtn, scoresBtn, optionsBtn, exitBtn);
         mainButtonsBox.setAlignment(Pos.CENTER);
 
         VBox menuBox = new VBox(20, title, mainButtonsBox);

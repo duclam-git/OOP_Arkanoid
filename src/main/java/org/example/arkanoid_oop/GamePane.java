@@ -22,16 +22,15 @@ import org.example.arkanoid_oop.Brick.Impervious_brick;
 import org.example.arkanoid_oop.Manager.AudioManager;
 import org.example.arkanoid_oop.Menu.HighScoreMenu;
 import org.example.arkanoid_oop.Menu.MainMenu;
+import org.example.arkanoid_oop.GameSettings.GameMode;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.Collections;
 
 import static org.example.arkanoid_oop.Brick.Brick.BRICK_HEIGHT;
 import static org.example.arkanoid_oop.Brick.Brick.BRICK_WIDTH;
@@ -65,6 +64,7 @@ public class GamePane extends Pane {
     private int level = 1;
     private int highscore = 0;
     private Random rand = new Random();
+    private GameMode gameMode;
     private List<ImageView> heartIcons = new ArrayList<>();
     private Text scoreText;
     private Text messageText;
@@ -89,6 +89,10 @@ public class GamePane extends Pane {
 
         setPrefSize(screenWidth, screenHeight);
         audio = AudioManager.getInstance();
+
+        this.gameMode = audio.getSettings().getGameMode();
+        this.lives = gameMode.getInitialLives();
+
         loadHighScoreForHUD();
 
         // Khởi tạo các đối tượng game
@@ -134,7 +138,7 @@ public class GamePane extends Pane {
     }
 
     private void loadHighScoreForHUD() {
-        List<Integer> scores = HighScoreMenu.loadHighScores();
+        List<Integer> scores = HighScoreMenu.loadHighScores(gameMode);
         this.highscore = scores.isEmpty() ? 0 : scores.get(0);
     }
 
@@ -239,25 +243,11 @@ public class GamePane extends Pane {
     }
 
     private void createHUD() {
-        heartIcons.clear();
-        Image heartImage = null;
-        try {
-            heartImage = new Image(getClass().getResourceAsStream("/images/Heart.png"));
-            if (heartImage.isError()) throw new NullPointerException("Lỗi tải Heart.png");
-        } catch (Exception e) {
-            System.err.println("Lỗi tải ảnh Heart.png: " + e.getMessage());
-        }
-        for (int i = 0; i < lives; i++) {
-            ImageView heartView = new ImageView(heartImage);
-            heartView.setFitWidth(25); heartView.setFitHeight(25);
-            heartView.setLayoutX(10 + (i * 30));
-            heartView.setLayoutY(10);
-            heartIcons.add(heartView);
-            getChildren().add(heartView);
-        }
+        // Logic tạo Text cho HUD giữ nguyên, KHÔNG CÓ heartIcons.clear() ở đây
         scoreText = new Text("Score: 0");
         scoreText.setFont(Font.font("Arial", 20)); scoreText.setFill(Color.WHITE);
         scoreText.setLayoutX(screenWidth - 120); scoreText.setLayoutY(30);
+
         levelText = new Text("Level: " + level);
         levelText.setFont(Font.font("Arial", 20)); levelText.setFill(Color.WHITE);
         levelText.setLayoutX(screenWidth / 2 - 120); levelText.setLayoutY(30);
@@ -266,11 +256,42 @@ public class GamePane extends Pane {
 
         highscoreText.setFont(Font.font("Arial", 20)); highscoreText.setFill(Color.WHITE);
         highscoreText.setLayoutX(screenWidth / 2 + 20); highscoreText.setLayoutY(30);
+
         messageText = new Text("Press SPACE to Start");
         messageText.setFont(Font.font("Arial", 30)); messageText.setFill(Color.WHITE);
         messageText.setLayoutX((screenWidth - messageText.getLayoutBounds().getWidth()) / 2);
         messageText.setLayoutY(screenHeight / 2);
+
         getChildren().addAll(scoreText, messageText, levelText, highscoreText);
+
+        // CHỈ GỌI HÀM TẠO ICON RIÊNG
+        createHeartIcons();
+    }
+
+    private void createHeartIcons() {
+        // Xóa icons cũ khỏi màn hình và danh sách
+        for (ImageView icon : heartIcons) {
+            getChildren().remove(icon);
+        }
+        heartIcons.clear();
+
+        Image heartImage = null;
+        try {
+            heartImage = new Image(getClass().getResourceAsStream("/images/Heart.png"));
+            if (heartImage.isError()) throw new NullPointerException("Lỗi tải Heart.png");
+        } catch (Exception e) {
+            System.err.println("Lỗi tải ảnh Heart.png: " + e.getMessage());
+        }
+
+        // Tạo icons mới tương ứng với số mạng hiện tại
+        for (int i = 0; i < lives; i++) {
+            ImageView heartView = new ImageView(heartImage);
+            heartView.setFitWidth(25); heartView.setFitHeight(25);
+            heartView.setLayoutX(10 + (i * 30));
+            heartView.setLayoutY(10);
+            heartIcons.add(heartView);
+            getChildren().add(heartView);
+        }
     }
 
     private void createPauseOverlay() {
@@ -386,7 +407,7 @@ public class GamePane extends Pane {
         audio.play("game_over");
         gameLoop.stop();
 
-        boolean isNewTop = HighScoreMenu.updateHighScores(score);
+        boolean isNewTop = HighScoreMenu.updateHighScores(score, gameMode);
         loadHighScoreForHUD();
         highscoreText.setText("High Score: " + highscore);
 
@@ -395,7 +416,7 @@ public class GamePane extends Pane {
         finalScoreText.setText("Final Score: " + score);
         highscoreNotice.setText("");
 
-        List<Integer> currentHighScores = HighScoreMenu.loadHighScores();
+        List<Integer> currentHighScores = HighScoreMenu.loadHighScores(gameMode);
         boolean madeTopList = currentHighScores.contains(score);
 
         if (isNewTop) {
@@ -488,10 +509,11 @@ public class GamePane extends Pane {
     }
 
     private void resetGame() {
-        lives = 3;
-        for (ImageView icon : heartIcons) {
-            icon.setVisible(true);
-        }
+        gameMode = audio.getSettings().getGameMode();
+        lives = gameMode.getInitialLives();
+
+        // NEW: Tạo lại Heart Icons
+        createHeartIcons();
 
         score = 0;
         scoreText.setText("Score: 0");

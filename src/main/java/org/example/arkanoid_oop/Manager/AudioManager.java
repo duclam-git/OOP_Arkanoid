@@ -152,6 +152,12 @@ public class AudioManager {
                 ObjectInputStream objectIn = new ObjectInputStream(fileIn)
         ) {
             settings = (GameSettings) objectIn.readObject();
+
+            // mặc định easy
+            if (settings.getGameMode() == null) {
+                settings.setGameMode(GameSettings.GameMode.EASY);
+            }
+
             // Nếu tải thành công, cần áp dụng trạng thái âm thanh ngay lập tức
             if (!settings.isSoundEnabled()) {
                 stopMenuMusic();
