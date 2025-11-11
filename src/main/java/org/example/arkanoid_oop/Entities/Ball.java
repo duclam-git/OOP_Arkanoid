@@ -23,9 +23,9 @@ public class Ball extends ImageView {
     private double screenWidth, screenHeight;
     private double startX, startY; // Vị trí ban đầu
 
-    public Ball(double screenWidth, double screenHeight, double startX, double startY) {
+    public Ball(double screenWidth, double screenHeight, double startX, double startY, String skinPath) {
         // 1. Tải ảnh quả bóng (hoặc thiên thạch)
-        super(new Image(Ball.class.getResourceAsStream("/images/ball.png")));
+        super(new Image(Ball.class.getResourceAsStream(skinPath)));
 
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -50,8 +50,8 @@ public class Ball extends ImageView {
     }
 
     // (MỚI) Phương thức khởi tạo cho Multi-Ball, sử dụng vị trí hiện tại
-    public Ball(double currentX, double currentY, double screenWidth, double screenHeight, double dx, double dy) {
-        this(screenWidth, screenHeight, currentX, currentY); // Gọi constructor chính để khởi tạo hình ảnh và animation
+    public Ball(double currentX, double currentY, double screenWidth, double screenHeight, double dx, double dy, String skinPath) {
+        this(screenWidth, screenHeight, currentX, currentY, skinPath); // Gọi constructor chính để khởi tạo hình ảnh và animation
         // Ghi đè lại vị trí và hướng
         setLayoutX(currentX - BALL_RADIUS);
         setLayoutY(currentY - BALL_RADIUS);

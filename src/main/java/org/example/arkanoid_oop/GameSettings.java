@@ -8,6 +8,7 @@ public class GameSettings implements Serializable {
 
     private boolean soundEnabled = true;
     private String paddleSkinPath = "/images/paddle.png";
+    private String ballSkinPath = "/images/ball.png";
 
     public GameSettings() {
     }
@@ -26,5 +27,13 @@ public class GameSettings implements Serializable {
 
     public void setPaddleSkinPath(String paddleSkinPath) {
         this.paddleSkinPath = paddleSkinPath;
+    }
+
+    public String getBallSkinPath() {
+        return ballSkinPath;
+    }
+
+    public void setBallSkinPath(String ballSkinPath) {
+        this.ballSkinPath = ballSkinPath;
     }
 }

@@ -14,28 +14,28 @@ import javafx.stage.Stage;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class PaddleSkinMenu extends Menu {
+public class BallSkinMenu extends Menu {
 
-    // Danh sách Skin Paddle có sẵn: Key=Tên hiển thị, Value=Đường dẫn ảnh
-    private static final Map<String, String> PADDLE_SKINS = new LinkedHashMap<>() {{
-        put("Tech", "/images/paddle.png");
-        put("Hydro", "/images/paddle1.png");
-        put("Aero", "/images/paddle2.png"); // Placeholder
-        put("Pyro", "/images/paddle3.png"); // Placeholder
+    // Danh sách Skin Ball có sẵn: Key=Tên hiển thị, Value=Đường dẫn ảnh
+    private static final Map<String, String> BALL_SKINS = new LinkedHashMap<>() {{
+        put("Tech", "/images/ball.png");
+        put("Cryo", "/images/ball1.png"); // Cần thêm file
+        put("Geo", "/images/ball2.png"); // Cần thêm file
+        put("Electro", "/images/ball3.png"); // Cần thêm file
     }};
 
     private Text statusText;
-    private ImageView previewPaddle;
+    private ImageView previewBall;
     private TilePane skinTilePane;
 
-    public PaddleSkinMenu(Stage stage) {
+    public BallSkinMenu(Stage stage) {
         super(stage);
     }
 
     @Override
     public void show() {
         // --- ẢNH NỀN ---
-        Image bgImage = new Image(getClass().getResource("/images/concept.png").toExternalForm());
+        Image bgImage = new Image(getClass().getResourceAsStream("/images/concept.png"));
         ImageView bgView = new ImageView(bgImage);
         bgView.setFitWidth(SCREEN_WIDTH);
         bgView.setFitHeight(SCREEN_HEIGHT);
@@ -72,24 +72,24 @@ public class PaddleSkinMenu extends Menu {
      */
     private VBox createPreviewArea() {
         // 1. Tiêu đề
-        Text title = new Text("PADDLE SKIN SELECTION");
+        Text title = new Text("BALL SKIN SELECTION");
         title.setFont(Font.font("Orbitron", 30));
         title.setStyle("-fx-fill: #00ffff; -fx-effect: dropshadow(gaussian, black, 10, 0, 0, 0);");
 
-        // 2. ImageView Preview
-        String currentSkinPath = audio.getSettings().getPaddleSkinPath();
-        Image currentImage = new Image(getClass().getResource(currentSkinPath).toExternalForm());
+        // 2. ImageView Preview (Ball có kích thước bằng nhau)
+        String currentSkinPath = audio.getSettings().getBallSkinPath();
+        Image currentImage = new Image(getClass().getResourceAsStream(currentSkinPath));
 
-        previewPaddle = new ImageView(currentImage);
-        previewPaddle.setFitWidth(250); // Lớn hơn bình thường
-        previewPaddle.setFitHeight(50);
+        previewBall = new ImageView(currentImage);
+        previewBall.setFitWidth(100);
+        previewBall.setFitHeight(100);
 
         // 3. Status Text
         statusText = new Text("CURRENTLY SELECTED");
         statusText.setFont(Font.font("Orbitron", 18));
         statusText.setFill(javafx.scene.paint.Color.LIME);
 
-        VBox box = new VBox(15, title, previewPaddle, statusText);
+        VBox box = new VBox(15, title, previewBall, statusText);
         box.setAlignment(Pos.CENTER);
         box.setMaxHeight(SCREEN_HEIGHT / 2.0);
         return box;
@@ -99,17 +99,15 @@ public class PaddleSkinMenu extends Menu {
      * Tạo khu vực Skin Selector ở nửa dưới màn hình.
      */
     private VBox createSkinSelectorArea() {
-        // Sử dụng TilePane để sắp xếp các skin theo lưới/dòng
         skinTilePane = new TilePane();
-        skinTilePane.setPrefColumns(2);
+        skinTilePane.setPrefColumns(4);
         skinTilePane.setHgap(30);
         skinTilePane.setVgap(30);
         skinTilePane.setAlignment(Pos.CENTER);
 
-        String selectedSkinPath = audio.getSettings().getPaddleSkinPath();
+        String selectedSkinPath = audio.getSettings().getBallSkinPath();
 
-        // Duyệt qua danh sách skins để tạo nút
-        for (Map.Entry<String, String> entry : PADDLE_SKINS.entrySet()) {
+        for (Map.Entry<String, String> entry : BALL_SKINS.entrySet()) {
             String skinName = entry.getKey();
             String skinPath = entry.getValue();
 
@@ -127,9 +125,9 @@ public class PaddleSkinMenu extends Menu {
      */
     private VBox createSkinButton(String name, String path, String selectedPath) {
         // 1. Ảnh Skin nhỏ
-        ImageView skinIcon = new ImageView(new Image(getClass().getResource(path).toExternalForm()));
-        skinIcon.setFitWidth(150);
-        skinIcon.setFitHeight(30);
+        ImageView skinIcon = new ImageView(new Image(getClass().getResourceAsStream(path)));
+        skinIcon.setFitWidth(50);
+        skinIcon.setFitHeight(50);
 
         // 2. Nút Select/Selected
         Button selectBtn = new Button();
@@ -139,12 +137,11 @@ public class PaddleSkinMenu extends Menu {
         selectBtn.setOnAction(e -> {
             audio.play("click");
 
-            // Cập nhật Settings và Lưu
-            audio.getSettings().setPaddleSkinPath(path);
+            audio.getSettings().setBallSkinPath(path);
             audio.saveSettings();
 
             // Cập nhật Preview
-            previewPaddle.setImage(new Image(getClass().getResource(path).toExternalForm()));
+            previewBall.setImage(new Image(getClass().getResourceAsStream(path)));
             statusText.setText("CURRENTLY SELECTED");
 
             // Cập nhật trạng thái TẤT CẢ các nút
@@ -153,6 +150,7 @@ public class PaddleSkinMenu extends Menu {
 
         // 4. Container cho mỗi skin
         VBox skinContainer = new VBox(5, new Text(name), skinIcon, selectBtn);
+        skinContainer.setUserData(path); // LƯU TRỮ PATH
         skinContainer.setAlignment(Pos.CENTER);
         skinContainer.setStyle("-fx-border-color: rgba(0, 255, 255, 0.5); -fx-border-width: 1; -fx-padding: 5;");
 
@@ -180,28 +178,14 @@ public class PaddleSkinMenu extends Menu {
      * Cập nhật trạng thái của TẤT CẢ các nút sau khi một nút được chọn.
      */
     private void updateAllSelectButtons(String newlySelectedPath) {
-        // Duyệt qua tất cả các ô skin trong TilePane
         for (javafx.scene.Node node : skinTilePane.getChildren()) {
             if (node instanceof VBox) {
                 VBox skinBox = (VBox) node;
-                // Lấy ImageView và Button từ VBox con
-                ImageView skinIcon = (ImageView) skinBox.getChildren().get(1);
                 Button selectBtn = (Button) skinBox.getChildren().get(2);
 
-                // Lấy đường dẫn từ ImageView (lưu ý: Image.getUrl() trả về full path)
-                String pathUrl = skinIcon.getImage().getUrl();
-
-                // Trích xuất path tương đối (ví dụ: "/images/paddle.png")
-                String relativePath = null;
-                for (String p : PADDLE_SKINS.values()) {
-                    if (pathUrl.endsWith(p)) {
-                        relativePath = p;
-                        break;
-                    }
-                }
+                String relativePath = (String) skinBox.getUserData();
 
                 if (relativePath != null) {
-                    // Áp dụng logic cập nhật trạng thái
                     updateSelectButton(selectBtn, relativePath, newlySelectedPath);
                 }
             }

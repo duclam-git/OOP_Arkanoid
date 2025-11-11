@@ -188,9 +188,14 @@ public class AudioManager {
 
             // THÊM LOGIC KIỂM TRA PADDLE SKIN PATH SAU KHI TẢI
             if (settings.getPaddleSkinPath() == null || !isValidSkinPath(settings.getPaddleSkinPath())) {
-                System.out.println("Cảnh báo: paddleSkinPath không hợp lệ hoặc null trong settings. Đặt lại mặc định.");
                 settings.setPaddleSkinPath("/images/paddle.png"); // Đặt lại mặc định hợp lệ
                 saveSettings(); // Lưu lại cài đặt đã sửa
+            }
+
+            // THÊM LOGIC KIỂM TRA BALL SKIN PATH
+            if (settings.getBallSkinPath() == null || !isValidSkinPath(settings.getBallSkinPath())) {
+                settings.setBallSkinPath("/images/ball.png"); // Mặc định Ball
+                saveSettings();
             }
 
             // Nếu tải thành công, cần áp dụng trạng thái âm thanh ngay lập tức

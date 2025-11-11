@@ -111,7 +111,7 @@ public class GamePane extends Pane {
         createGameOverOverlay();
 
         // (MỚI) Khởi tạo trình quản lý đuôi
-        ballTrailManager = new BallTrailManager(this); // 'this' chính là Pane
+        ballTrailManager = new BallTrailManager(this, audio.getSettings().getBallSkinPath()); // 'this' chính là Pane
 
         // Bắt đầu vòng lặp game
         gameLoop = new AnimationTimer() {
@@ -180,7 +180,7 @@ public class GamePane extends Pane {
     private void spawnInitialBall() {
         double ballStartX = paddle.getLayoutX() + (paddle.getBoundsInLocal().getWidth() / 2);
         double ballStartY = paddle.getLayoutY() - 15;
-        Ball initialBall = new Ball(screenWidth, screenHeight, ballStartX, ballStartY);
+        Ball initialBall = new Ball(screenWidth, screenHeight, ballStartX, ballStartY, audio.getSettings().getBallSkinPath());
         balls.add(initialBall);
         getChildren().add(initialBall);
     }
@@ -634,15 +634,16 @@ public class GamePane extends Pane {
         if (balls.isEmpty()) return;
         List<Ball> newBalls = new ArrayList<>();
         List<Ball> currentBallsSnapshot = new ArrayList<>(balls);
+        String skinPath = audio.getSettings().getBallSkinPath();
 
         for (Ball sourceBall : currentBallsSnapshot) {
             if (balls.contains(sourceBall)) {
                 double ballX = sourceBall.getLayoutX() + sourceBall.getRadius();
                 double ballY = sourceBall.getLayoutY() + sourceBall.getRadius();
                 double speed = sourceBall.getSpeed();
-                Ball newBall1 = new Ball(ballX, ballY, screenWidth, screenHeight, -speed * 1.5, -speed * 0.5);
+                Ball newBall1 = new Ball(ballX, ballY, screenWidth, screenHeight, -speed * 1.5, -speed * 0.5, skinPath);
                 newBalls.add(newBall1);
-                Ball newBall2 = new Ball(ballX, ballY, screenWidth, screenHeight, speed * 1.5, -speed * 0.5);
+                Ball newBall2 = new Ball(ballX, ballY, screenWidth, screenHeight, speed * 1.5, -speed * 0.5, skinPath);
                 newBalls.add(newBall2);
             }
         }

@@ -23,16 +23,16 @@ public class BallTrailManager {
     private static final double FADE_SPEED = 0.04; // Tốc độ mờ (cao hơn = mờ nhanh hơn)
     private static final int SPAWN_FREQUENCY = 3;  // Tạo đuôi sau mỗi 3 khung hình
 
-    public BallTrailManager(Pane gamePane) {
+    public BallTrailManager(Pane gamePane, String ballSkinPath) {
         this.gamePane = gamePane;
 
-        // Tải ảnh quả bóng một lần duy nhất
+        // Tải ảnh quả bóng một lần duy nhất (SỬ DỤNG ballSkinPath)
         try {
             // Lấy ảnh từ file ball.png
-            ballImage = new Image(getClass().getResourceAsStream("/images/ball.png"));
+            ballImage = new Image(getClass().getResourceAsStream(ballSkinPath));
             if (ballImage.isError()) throw new Exception(ballImage.getException());
         } catch (Exception e) {
-            System.err.println("Lỗi: Không tải được ảnh 'ball.png' cho hiệu ứng đuôi: " + e.getMessage());
+            System.err.println("Lỗi: Không tải được ảnh '" + ballSkinPath + "' cho hiệu ứng đuôi: " + e.getMessage());
             ballImage = null; // Sẽ không có hiệu ứng nếu ảnh lỗi
         }
     }
