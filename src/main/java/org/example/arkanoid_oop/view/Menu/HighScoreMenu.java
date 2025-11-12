@@ -99,17 +99,14 @@ public class HighScoreMenu extends Menu {
         return isNewTopScore;
     }
 
-    // ===================================
-    // HÀM SHOW() ĐÃ ĐƯỢC VIẾT LẠI
-    // ===================================
-
+    // HÀM SHOW()
     public HighScoreMenu(Stage stage) {
         super(stage);
     }
 
     @Override
     public void show() {
-        // --- ẢNH NỀN ---
+        // ẢNH NỀN
         Image bgImage = new Image(getClass().getResource("/images/concept.png").toExternalForm());
         ImageView bgView = new ImageView(bgImage);
         bgView.setFitWidth(SCREEN_WIDTH);
@@ -119,36 +116,34 @@ public class HighScoreMenu extends Menu {
         StackPane root = new StackPane();
         root.getChildren().add(bgView);
 
-        // --- TIÊU ĐỀ CHUNG ---
+        // TIÊU ĐỀ CHUNG
         Text title = new Text("HIGH SCORE LEADERBOARD");
         title.setFont(Font.font("Orbitron", 40));
         title.setStyle("-fx-fill: #00ffff; -fx-effect: dropshadow(gaussian, black, 10, 0, 0, 0);");
 
-        // --- NƠI CHỨA CÁC BẢNG ĐIỂM ---
+        // NƠI CHỨA CÁC BẢNG ĐIỂM
         HBox scoreDisplayContainer = new HBox(30);
         scoreDisplayContainer.setAlignment(Pos.CENTER);
         scoreDisplayContainer.setPadding(new Insets(0, 0, 50, 0));
 
-        // --- BIỂU TƯỢNG LOADING ---
+        // BIỂU TƯỢNG LOADING
         ProgressIndicator loadingIndicator = new ProgressIndicator();
         loadingIndicator.setPrefSize(80, 80);
         loadingIndicator.setStyle("-fx-progress-color: #00ffff;");
 
-        // --- CONTAINER CHÍNH ---
+        // CONTAINER CHÍNH
         VBox mainContainer = new VBox(20, title, loadingIndicator, scoreDisplayContainer);
         mainContainer.setAlignment(Pos.CENTER);
         mainContainer.setPadding(new Insets(20));
         mainContainer.setStyle("-fx-background-color: rgba(0, 0, 0, 0.7); -fx-border-color: #00ffff; -fx-border-width: 2;");
 
-        // --- NÚT BACK ---
+        // NÚT BACK
         Button backButton = createBackButton();
 
         root.getChildren().addAll(mainContainer, backButton);
 
-        // ===================================
-        // LOGIC ĐA LUỒNG
-        // ===================================
 
+        // LOGIC ĐA LUỒNG
         // 1. Tạo Task để tải tất cả điểm ở luồng nền
         Task<Map<GameMode, List<Integer>>> loadScoresTask = new Task<>() {
             @Override
@@ -200,7 +195,7 @@ public class HighScoreMenu extends Menu {
         // 4. Khởi động Task trong một Thread mới
         new Thread(loadScoresTask).start();
 
-        // --- HIỂN THỊ SCENE ---
+        // HIỂN THỊ SCENE
         Scene menuScene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT);
         stage.setScene(menuScene);
         stage.show();

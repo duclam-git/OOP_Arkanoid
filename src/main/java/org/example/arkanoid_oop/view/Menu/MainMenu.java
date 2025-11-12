@@ -35,7 +35,7 @@ public class MainMenu extends Menu {
 
     @Override
     public void show() {
-        // --- ẢNH NỀN ---
+        // ẢNH NỀN
         Image bgImage = new Image(getClass().getResource("/images/concept.png").toExternalForm());
         ImageView bgView = new ImageView(bgImage);
         bgView.setFitWidth(SCREEN_WIDTH);
@@ -45,7 +45,7 @@ public class MainMenu extends Menu {
         StackPane root = new StackPane();
         root.getChildren().add(bgView);
 
-        // --- KHỞI TẠO CÁC PHẦN TỬ ---
+        // KHỞI TẠO CÁC PHẦN TỬ
 
         // 1. Menu Chính (Tiêu đề + Nút START/OPTIONS/EXIT)
         menuBoxContainer = createMainMenuVBox();
@@ -59,26 +59,25 @@ public class MainMenu extends Menu {
         // 4. Nút Back (Góc dưới trái)
         backButton = createBackButton();
 
-        // --- CẤU HÌNH BAN ĐẦU (Menu Chính hiện, Debug ẩn) ---
+        // CẤU HÌNH BAN ĐẦU (Menu Chính hiện, Debug ẩn)
         debugMenuBox.setVisible(false);
         backButton.setVisible(false);
 
         // Thêm tất cả vào root
         root.getChildren().addAll(menuBoxContainer, debugButton, debugMenuBox, backButton);
 
-        // --- NHẠC NỀN LOOP ---
+        // NHẠC NỀN LOOP
         if (audio.isSoundEnabled()) {
             audio.playMenuMusic();
         }
 
-        // --- SỰ KIỆN CHUYỂN ĐỔI VIEW ---
+        // SỰ KIỆN CHUYỂN ĐỔI VIEW
         debugButton.setOnAction(e -> switchToDebugMenu());
         backButton.setOnAction(e -> switchToMainMenu());
 
-        // --- SỰ KIỆN NÚT CHÍNH ---
+        // SỰ KIỆN NÚT CHÍNH
         VBox mainButtonsBox = (VBox)menuBoxContainer.getChildren().get(1);
         Button startBtn = (Button)mainButtonsBox.getChildren().get(0);
-// NEW: Mode Button
         Button modeBtn = (Button)mainButtonsBox.getChildren().get(1);
         Button scoresBtn = (Button)mainButtonsBox.getChildren().get(2);
         Button optionsBtn = (Button)mainButtonsBox.getChildren().get(3);
@@ -93,7 +92,7 @@ public class MainMenu extends Menu {
                 audio.playGameMusic();
             }
 
-            // *** GỌI RESET TRƯỚC KHI TẠO INSTANCE MỚI ***
+            // GỌI RESET TRƯỚC KHI TẠO INSTANCE MỚI ***
             GamePane.resetInstance();
 
             GamePane gamePane = GamePane.getInstance(SCREEN_WIDTH, SCREEN_HEIGHT, stage);
@@ -138,10 +137,7 @@ public class MainMenu extends Menu {
         stage.show();
     }
 
-    // ===================================
     // PHƯƠNG THỨC CHUYỂN ĐỔI VIEW
-    // ===================================
-
     private void switchToDebugMenu() {
         audio.play("click");
         // Ẩn Menu chính
@@ -164,17 +160,14 @@ public class MainMenu extends Menu {
         debugButton.setVisible(true);
     }
 
-    // ===================================
     // PHƯƠNG THỨC TẠO THÀNH PHẦN
-    // ===================================
-
     private VBox createMainMenuVBox() {
-        // --- TIÊU ĐỀ ---
+        // TIÊU ĐỀ
         Text title = new Text("");
         title.setFont(Font.font("Orbitron", 40));
         title.setStyle("-fx-fill: #00ffff; -fx-effect: dropshadow(gaussian, black, 10, 0, 0, 0);");
 
-        // --- NÚT CHÍNH ---
+        // NÚT CHÍNH
         Button startBtn = new Button("START");
         Button modeBtn = new Button("MODE");
         Button scoresBtn = new Button("HIGH SCORES");
@@ -201,7 +194,7 @@ public class MainMenu extends Menu {
             ));
         }
 
-        // --- MENU BOX ---
+        // MENU BOX
         // MODIFIED: Added scoresBtn to the VBox
         VBox mainButtonsBox = new VBox(20, startBtn, modeBtn, scoresBtn, optionsBtn, exitBtn);
         mainButtonsBox.setAlignment(Pos.CENTER);

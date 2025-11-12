@@ -22,7 +22,7 @@ public class LoadingMenu extends Menu {
 
     @Override
     public void show() {
-        // --- 1. THIẾT LẬP GIAO DIỆN ---
+        // 1. THIẾT LẬP GIAO DIỆN
 
         // Nền (sử dụng ảnh nền của menu)
         Image bgImage = new Image(getClass().getResource("/images/concept.png").toExternalForm());
@@ -49,7 +49,7 @@ public class LoadingMenu extends Menu {
         StackPane root = new StackPane(bgView, loadingBox);
         root.setAlignment(Pos.CENTER);
 
-        // --- 2. TẠO TASK ĐA LUỒNG ---
+        // 2. TẠO TASK ĐA LUỒNG
 
         // Task này sẽ chạy các tác vụ nặng ở luồng nền
         Task<Void> loadingTask = new Task<>() {
@@ -57,17 +57,17 @@ public class LoadingMenu extends Menu {
             protected Void call() throws Exception {
                 // Tác vụ này chạy trên LUỒNG NỀN (Background Thread)
 
-                // Bước 1: Tải Settings
+                // 1: Tải Settings
                 updateMessage("Đang tải cài đặt...");
                 audio.loadSettings(); // Đây là I/O
                 updateProgress(1, 4);
 
-                // Bước 2: Tải Âm thanh
+                // 2: Tải Âm thanh
                 updateMessage("Đang tải âm thanh...");
                 audio.preloadSounds(); // Đây là I/O nặng
                 updateProgress(2, 4);
 
-                // Bước 3: Tải trước (cache) các ảnh chính
+                // 3: Tải trước (cache) các ảnh chính
                 updateMessage("Đang tải hình ảnh...");
                 new Image(getClass().getResource("/images/background.png").toExternalForm());
                 new Image(getClass().getResource("/images/paddle.png").toExternalForm());
@@ -85,7 +85,7 @@ public class LoadingMenu extends Menu {
             }
         };
 
-        // --- 3. KẾT NỐI UI VÀ TASK ---
+        // 3. KẾT NỐI UI VÀ TASK
 
         // Tự động cập nhật ProgressIndicator khi Task cập nhật tiến độ
         progressIndicator.progressProperty().bind(loadingTask.progressProperty());
@@ -93,7 +93,7 @@ public class LoadingMenu extends Menu {
         // Tự động cập nhật Text khi Task cập nhật message
         statusText.textProperty().bind(loadingTask.messageProperty());
 
-        // --- 4. ĐỊNH NGHĨA HÀNH ĐỘNG KHI TASK XONG ---
+        // 4. ĐỊNH NGHĨA HÀNH ĐỘNG KHI TASK XONG
 
         // Hàm này sẽ chạy trên LUỒNG UI (JavaFX Thread) sau khi 'call()' hoàn thành
         loadingTask.setOnSucceeded(e -> {
@@ -102,7 +102,7 @@ public class LoadingMenu extends Menu {
             menu.show();
         });
 
-        // (Tùy chọn) Xử lý nếu Task thất bại
+        // Xử lý nếu Task thất bại
         loadingTask.setOnFailed(e -> {
             statusText.setText("Lỗi! Không thể tải game.");
             statusText.setFill(Color.RED);
@@ -110,7 +110,7 @@ public class LoadingMenu extends Menu {
             loadingTask.getException().printStackTrace(); // In lỗi ra console
         });
 
-        // --- 5. CHẠY TASK VÀ HIỂN THỊ SCENE ---
+        // 5. CHẠY TASK VÀ HIỂN THỊ SCENE
 
         // Khởi động Task trong một Thread mới
         new Thread(loadingTask).start();

@@ -19,9 +19,9 @@ public class BallSkinMenu extends Menu {
     // Danh sách Skin Ball có sẵn: Key=Tên hiển thị, Value=Đường dẫn ảnh
     private static final Map<String, String> BALL_SKINS = new LinkedHashMap<>() {{
         put("Tech", "/images/ball.png");
-        put("Cryo", "/images/ball1.png"); // Cần thêm file
-        put("Geo", "/images/ball2.png"); // Cần thêm file
-        put("Electro", "/images/ball3.png"); // Cần thêm file
+        put("Cryo", "/images/ball1.png");
+        put("Geo", "/images/ball2.png");
+        put("Electro", "/images/ball3.png");
     }};
 
     private Text statusText;
@@ -34,7 +34,7 @@ public class BallSkinMenu extends Menu {
 
     @Override
     public void show() {
-        // --- ẢNH NỀN ---
+        // ẢNH NỀN
         Image bgImage = new Image(getClass().getResourceAsStream("/images/concept.png"));
         ImageView bgView = new ImageView(bgImage);
         bgView.setFitWidth(SCREEN_WIDTH);
@@ -44,7 +44,7 @@ public class BallSkinMenu extends Menu {
         StackPane root = new StackPane();
         root.getChildren().add(bgView);
 
-        // --- Cấu trúc chính: VBox chứa Preview và Selector ---
+        // Cấu trúc chính: VBox chứa Preview và Selector
         VBox mainContainer = new VBox(20);
         mainContainer.setAlignment(Pos.CENTER);
         mainContainer.setPadding(new Insets(20));
@@ -144,7 +144,7 @@ public class BallSkinMenu extends Menu {
             previewBall.setImage(new Image(getClass().getResourceAsStream(path)));
             statusText.setText("CURRENTLY SELECTED");
 
-            // Cập nhật trạng thái TẤT CẢ các nút
+            // Cập nhật trạng thái tất cả các nút
             updateAllSelectButtons(path);
         });
 

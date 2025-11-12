@@ -24,7 +24,7 @@ public class OptionsMenu extends Menu {
 
     @Override
     public void show() {
-        // --- ẢNH NỀN ---
+        // ẢNH NỀN
         Image bgImage = new Image(getClass().getResource("/images/concept.png").toExternalForm());
         ImageView bgView = new ImageView(bgImage);
         bgView.setFitWidth(SCREEN_WIDTH);
@@ -34,7 +34,7 @@ public class OptionsMenu extends Menu {
         StackPane root = new StackPane();
         root.getChildren().add(bgView);
 
-        // --- KHỞI TẠO CÁC PHẦN TỬ ---
+        // KHỞI TẠO CÁC PHẦN TỬ
 
         // 1. Menu Tùy chọn (Tiêu đề + Nút)
         optionsBoxContainer = createOptionsVBox();
@@ -45,7 +45,7 @@ public class OptionsMenu extends Menu {
         // Thêm tất cả vào root
         root.getChildren().addAll(optionsBoxContainer, backButton);
 
-        // --- SỰ KIỆN NÚT ---
+        // SỰ KIỆN NÚT
 
         // Truy cập nút Sound Toggle trong VBox
         VBox mainButtonsBox = (VBox)optionsBoxContainer.getChildren().get(1);
@@ -80,10 +80,7 @@ public class OptionsMenu extends Menu {
         stage.show();
     }
 
-    // ===================================
     // PHƯƠNG THỨC TẠO THÀNH PHẦN
-    // ===================================
-
     /**
      * Tạo VBox chứa Tiêu đề và các nút tùy chọn chính.
      */
@@ -93,7 +90,7 @@ public class OptionsMenu extends Menu {
         title.setFont(Font.font("Orbitron", 40));
         title.setStyle("-fx-fill: #00ffff; -fx-effect: dropshadow(gaussian, black, 10, 0, 0, 0);");
 
-        // --- NÚT CHÍNH ---
+        // NÚT CHÍNH
         // Nút này được khởi tạo ở đây nhưng logic được thêm vào trong show()
         Button soundBtn = new Button("SOUND: ON/OFF");
         soundBtn.setId("soundToggle"); // Đặt ID để truy cập dễ hơn
@@ -118,7 +115,7 @@ public class OptionsMenu extends Menu {
             ));
         }
 
-        // --- MENU BOX ---
+        // MENU BOX
         VBox mainButtonsBox = new VBox(20, soundBtn);
         mainButtonsBox.setAlignment(Pos.CENTER);
 

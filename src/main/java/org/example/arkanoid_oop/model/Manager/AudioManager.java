@@ -65,8 +65,8 @@ public class AudioManager {
         loadClip("lose", "/sounds/lose.wav", 2);
         loadClip("tele", "/sounds/teleport.wav", 2);
         loadClip("click", "/sounds/click.wav", 2);
-        loadClip("menu_music", "/sounds/menu_music.wav", 1); // vẫn dùng pool cho click nhạc ngắn, nhưng nhạc loop dùng MediaPlayer
-        loadClip("game_bg", "/sounds/game_bg.wav", 1);
+        loadClip("menu_music", "/sounds/menu_music.mp3", 1);
+        loadClip("game_bg", "/sounds/game_bg.mp3", 1);
     }
 
     /**
@@ -101,7 +101,7 @@ public class AudioManager {
     // Nhạc nền MENU
     public void playMenuMusic() {
         stopMenuMusic(); // dừng nhạc cũ nếu có
-        Media media = new Media(getClass().getResource("/sounds/menu_music.wav").toExternalForm());
+        Media media = new Media(getClass().getResource("/sounds/menu_music.mp3").toExternalForm());
         menuMusic = new MediaPlayer(media);
         menuMusic.setCycleCount(MediaPlayer.INDEFINITE); // loop vô hạn
         menuMusic.setVolume(0.5);
@@ -121,7 +121,7 @@ public class AudioManager {
     // ============================
     public void playGameMusic() {
         stopGameMusic();
-        Media media = new Media(getClass().getResource("/sounds/game_bg.wav").toExternalForm());
+        Media media = new Media(getClass().getResource("/sounds/game_bg.mp3").toExternalForm());
         gameMusic = new MediaPlayer(media);
         gameMusic.setCycleCount(MediaPlayer.INDEFINITE);
         gameMusic.setVolume(0.5);

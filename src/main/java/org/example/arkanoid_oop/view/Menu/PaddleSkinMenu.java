@@ -34,7 +34,7 @@ public class PaddleSkinMenu extends Menu {
 
     @Override
     public void show() {
-        // --- ẢNH NỀN ---
+        // ẢNH NỀN
         Image bgImage = new Image(getClass().getResource("/images/concept.png").toExternalForm());
         ImageView bgView = new ImageView(bgImage);
         bgView.setFitWidth(SCREEN_WIDTH);
@@ -44,7 +44,7 @@ public class PaddleSkinMenu extends Menu {
         StackPane root = new StackPane();
         root.getChildren().add(bgView);
 
-        // --- Cấu trúc chính: VBox chứa Preview và Selector ---
+        // Cấu trúc chính: VBox chứa Preview và Selector
         VBox mainContainer = new VBox(20);
         mainContainer.setAlignment(Pos.CENTER);
         mainContainer.setPadding(new Insets(20));
