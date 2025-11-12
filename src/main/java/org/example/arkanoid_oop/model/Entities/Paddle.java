@@ -2,7 +2,7 @@ package org.example.arkanoid_oop.model.Entities;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.example.arkanoid_oop.model.util.GameSettings.GameMode; // THÊM IMPORT
+import org.example.arkanoid_oop.model.util.GameSettings.GameMode;
 
 /**
  * Lớp Paddle (ván trượt) kế thừa ImageView.
@@ -31,7 +31,7 @@ public class Paddle extends ImageView {
         this.originalWidth = getBasePaddleWidth(gameMode);
 
         // Thiết lập kích thước cho ảnh
-        setFitWidth(this.originalWidth); // Sửa lại: dùng this.originalWidth
+        setFitWidth(this.originalWidth);
         setFitHeight(PADDLE_HEIGHT_DISPLAY); // CỐ ĐỊNH CHIỀU CAO
 
         this.currentWidth = getFitWidth(); // Lấy chiều rộng sau khi đã đặt setFitWidth
@@ -70,7 +70,7 @@ public class Paddle extends ImageView {
         setLayoutY(startY);
     }
 
-    // (CẬP NHẬT) Tăng gấp đôi chiều dài Paddle (Giữ nguyên chiều dọc)
+    // Tăng gấp đôi chiều dài Paddle (Giữ nguyên chiều dọc)
     public void setDoubleLength() {
         if (getFitWidth() == originalWidth) {
             double currentX = getLayoutX();
@@ -90,7 +90,7 @@ public class Paddle extends ImageView {
         }
     }
 
-    // (CẬP NHẬT) Đặt chiều dài Paddle về kích thước gốc
+    // Đặt chiều dài Paddle về kích thước gốc
     public void setNormalLength() {
         if (getFitWidth() != originalWidth) {
             double currentX = getLayoutX();

@@ -6,9 +6,8 @@ import javafx.scene.image.ImageView;
 public class Normal_brick extends Brick {
 
     public Normal_brick(double x, double y) {
-        super(x, y); // Gọi hàm khởi tạo của lớp cha
+        super(x, y);
 
-        // Tải ảnh gạch thường (đảm bảo có file "normal_brick.png")
         Image img = new Image(getClass().getResourceAsStream("/images/normal_brick.png"));
         this.view = new ImageView(img); // Khởi tạo ImageView
 
@@ -23,7 +22,7 @@ public class Normal_brick extends Brick {
 
     @Override
     public boolean onHit() {
-        // Gạch thường bị phá hủy ngay lập tức
+        // Gạch thường bị phá hủy
         setDestroyed(true);
         return true; // Trả về true (đã bị phá hủy)
     }

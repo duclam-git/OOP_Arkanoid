@@ -14,7 +14,6 @@ public class Powerup_brick extends Brick {
     public Powerup_brick(double x, double y) {
         super(x, y);
 
-        // Tải ảnh gạch vật phẩm
         Image img = new Image(getClass().getResourceAsStream("/images/powerup_brick.png"));
         this.view = new ImageView(img);
 
@@ -25,7 +24,7 @@ public class Powerup_brick extends Brick {
 
         this.scoreValue = 30; // Gạch này giá trị cao
 
-        // (CẬP NHẬT) Chọn ngẫu nhiên loại vật phẩm trong 4 loại
+        // Chọn ngẫu nhiên loại vật phẩm trong 4 loại
         int chance = rand.nextInt(4); // 0, 1, 2, hoặc 3
         if (chance == 0) {
             this.powerupType = PowerupType.MULTI_BALL;

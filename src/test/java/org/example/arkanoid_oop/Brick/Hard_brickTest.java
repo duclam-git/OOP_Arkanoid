@@ -65,10 +65,9 @@ public class Hard_brickTest {
     @Test
     void testOnHit_SubsequentHits() {
         // 4. Chạm thêm sau khi đã phá hủy
-        hardBrick.onHit();
         hardBrick.onHit(); // Đã phá hủy
 
-        boolean wasDestroyed = hardBrick.onHit(); // Lần 3
+        boolean wasDestroyed = hardBrick.onHit(); // Lần 2
 
         assertTrue(wasDestroyed, "Lần chạm sau khi phá hủy vẫn nên trả về true.");
         assertTrue(hardBrick.isDestroyed(), "isDestroyed() vẫn phải là true.");

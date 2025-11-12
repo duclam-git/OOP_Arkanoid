@@ -16,14 +16,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 
-// ===================================
-// CÁC IMPORT THEO CẤU TRÚC MVC MỚI
-// ===================================
-
 // Model: Brick
 import org.example.arkanoid_oop.model.Brick.Brick;
 import org.example.arkanoid_oop.model.Brick.*; // Bao gồm cả Explosive_brick, Hard_brick, Powerup_brick
-import org.example.arkanoid_oop.model.Brick.Impervious_brick; // Import riêng Impervious_brick nếu cần tham chiếu tường minh
+import org.example.arkanoid_oop.model.Brick.Impervious_brick;
 
 // Model: Entity
 import org.example.arkanoid_oop.model.Entities.*;
@@ -36,7 +32,7 @@ import org.example.arkanoid_oop.model.Entities.Teleporter;
 import org.example.arkanoid_oop.model.Manager.BallTrailManager;
 import org.example.arkanoid_oop.model.Manager.AudioManager;
 import org.example.arkanoid_oop.model.util.PowerupType;
-import org.example.arkanoid_oop.model.util.GameSettings.GameMode; // Lấy Enum GameMode
+import org.example.arkanoid_oop.model.util.GameSettings.GameMode;
 
 // View
 import org.example.arkanoid_oop.view.Background;
@@ -121,7 +117,6 @@ public class GamePane extends Pane {
         background = new Background(screenWidth, screenHeight);
         getChildren().add(background);
 
-        // SỬA DÒNG NÀY: Truyền 'this.gameMode' vào hàm tạo Paddle
         paddle = new Paddle(screenWidth, screenHeight, audio.getSettings().getPaddleSkinPath(), this.gameMode);
         getChildren().add(paddle);
 
@@ -209,9 +204,7 @@ public class GamePane extends Pane {
         getChildren().add(initialBall);
     }
 
-    // ==================================================================
-    // HÀM CREATEBRICKS ĐÃ ĐƯỢC CẬP NHẬT THEO LOGIC CỦA BẠN
-    // ==================================================================
+    // Logic về các brick
     private void createBricks() {
         int brickRows = 7;
         int brickCols = 10;
@@ -225,13 +218,11 @@ public class GamePane extends Pane {
                 double x = offsetLeft + c * (BRICK_WIDTH + padding);
                 double y = offsetTop + r * (BRICK_HEIGHT + padding);
                 Brick brick = null;
-                double chance = rand.nextDouble(); // 0.0 -> 1.0
-
-                // (CẬP NHẬT LOGIC ĐỘ KHÓ THEO YÊU CẦU MỚI)
+                double chance = rand.nextDouble();
 
                 if (gameMode == GameMode.EASY) {
                     // Dễ: Nhiều gạch nổ (15%), nhiều powerup, nhiều gạch thường
-                    if (chance < 0.15) brick = new Explosive_brick(x, y);    // 15% (Tăng từ 10%)
+                    if (chance < 0.15) brick = new Explosive_brick(x, y);
                     else if (chance < 0.40) brick = new Powerup_brick(x, y); // 25%
                     else if (chance < 0.55) brick = new Hard_brick(x, y);    // 15%
                     else brick = new Normal_brick(x, y);                     // 45% (Giảm từ 50%)
@@ -243,7 +234,7 @@ public class GamePane extends Pane {
                     else if (chance < 0.45) brick = new Hard_brick(x, y);    // 20%
                     else brick = new Normal_brick(x, y);                     // 55% (Gốc 45% + 10% cũ)
 
-                } else { // (GameMode.HARD)
+                } else {
                     // Khó: Gạch bất tử bao quanh, 2 lỗ ở giữa, bên trong toàn gạch khó.
 
                     // 1. Xây tường bao (Hàng trên cùng, Cột trái, Cột phải)
@@ -254,20 +245,19 @@ public class GamePane extends Pane {
                     else if (r == 6) { // Hàng dưới cùng
                         if (c == 4 || c == 5) {
                             // Đây là 2 lỗ ở giữa, không tạo gạch
-                            continue; // Bỏ qua, không add brick
+                            continue;
                         } else {
                             brick = new Impervious_brick(x, y); // Phần còn lại của tường đáy
                         }
                     }
                     // 3. Xây gạch bên trong (Rows 1-5, Cols 1-8)
                     else {
-                        // Tỉ lệ % của Hard (bỏ 20% Impervious), tổng là 80%
-                        // Tỉ lệ mới = Tỉ lệ cũ / 0.8
+                        // Tỉ lệ % của Hard (bỏ 20% Impervious), tổng là 80
                         // CẬP NHẬT TỈ LỆ MỚI CHO HARD:
-                        // Explosive: 5% (Giảm mạnh)
-                        // Powerup:   12.5% (Giữ nguyên)
-                        // Hard:      51.25% (Tăng mạnh)
-                        // Normal:    31.25% (Giữ nguyên)
+                        // Explosive: 5%
+                        // Powerup:   12.5%
+                        // Hard:      51.25%
+                        // Normal:    31.25%
 
                         if (chance < 0.05) brick = new Explosive_brick(x, y);    // 5%
                         else if (chance < 0.175) brick = new Powerup_brick(x, y); // 12.5% (0.05 + 0.125)
@@ -276,8 +266,6 @@ public class GamePane extends Pane {
                     }
                 }
 
-                // Chỉ thêm gạch nếu nó được tạo
-                // (Quan trọng vì chế độ Hard có thể 'continue' và bỏ qua việc tạo gạch)
                 if (brick != null) {
                     bricks.add(brick);
                 }
@@ -306,7 +294,6 @@ public class GamePane extends Pane {
     }
 
     private void createHUD() {
-        // Logic tạo Text cho HUD giữ nguyên, KHÔNG CÓ heartIcons.clear() ở đây
         scoreText = new Text("Score: 0");
         scoreText.setFont(Font.font("Arial", 20)); scoreText.setFill(Color.WHITE);
         scoreText.setLayoutX(screenWidth - 120); scoreText.setLayoutY(30);
@@ -760,7 +747,7 @@ public class GamePane extends Pane {
                     double paddleHalfWidth = paddleBounds.getWidth() / 2.0;
                     double relativeHit = (hitPointX - paddleCenter) / paddleHalfWidth;
 
-                    // SỬA LẠI: Lấy tốc độ cơ sở từ chính quả bóng
+                    // Lấy tốc độ cơ sở từ chính quả bóng
                     double newDx = relativeHit * (ball.getSpeed() * 1.5);
                     double newDy = -ball.getSpeed();
 
@@ -902,13 +889,10 @@ public class GamePane extends Pane {
         }
     }
 
-    // ==================================================================
-    // HÀM SPAWNPOWERUP ĐÃ ĐƯỢC CẬP NHẬT
-    // ==================================================================
     private void spawnPowerup(Powerup_brick brick) {
         double chance = rand.nextDouble();
 
-        // (MỚI) Tỉ lệ rơi vật phẩm dựa trên độ khó
+        // Tỉ lệ rơi vật phẩm dựa trên độ khó
         double spawnChance;
         switch (gameMode) {
             case EASY:
@@ -923,7 +907,7 @@ public class GamePane extends Pane {
                 break;
         }
 
-        if (chance <= spawnChance) { // Sửa lại: dùng 'spawnChance'
+        if (chance <= spawnChance) {
             PowerupType type = brick.getPowerupType();
             double x = brick.getCenterX();
             double y = brick.getCenterY();
@@ -954,9 +938,6 @@ public class GamePane extends Pane {
         }
     }
 
-    // ==================================================================
-    // HÀM SPAWNMULTIBALL ĐÃ ĐƯỢC CẬP NHẬT
-    // ==================================================================
     private void spawnMultiBall() {
         if (balls.isEmpty()) return;
         List<Ball> newBalls = new ArrayList<>();
@@ -967,9 +948,8 @@ public class GamePane extends Pane {
             if (balls.contains(sourceBall)) {
                 double ballX = sourceBall.getLayoutX() + sourceBall.getRadius();
                 double ballY = sourceBall.getLayoutY() + sourceBall.getRadius();
-                double speed = sourceBall.getSpeed(); // Tốc độ này đã chuẩn theo độ khó
+                double speed = sourceBall.getSpeed(); // Tốc độ này chuẩn theo độ khó
 
-                // SỬA LẠI CÁC DÒNG NÀY (thêm 'this.gameMode'):
                 Ball newBall1 = new Ball(ballX, ballY, screenWidth, screenHeight, -speed * 1.5, -speed * 0.5, skinPath, this.gameMode);
                 newBalls.add(newBall1);
                 Ball newBall2 = new Ball(ballX, ballY, screenWidth, screenHeight, speed * 1.5, -speed * 0.5, skinPath, this.gameMode);

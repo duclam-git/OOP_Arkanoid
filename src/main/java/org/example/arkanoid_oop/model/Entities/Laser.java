@@ -14,7 +14,6 @@ public class Laser extends ImageView {
     private static final double LASER_HEIGHT = 40;
 
     public Laser(double startX, double startY) {
-        // Tải ảnh laser.png
         super(new Image(Laser.class.getResourceAsStream("/images/laser.png")));
 
         // Thiết lập kích thước

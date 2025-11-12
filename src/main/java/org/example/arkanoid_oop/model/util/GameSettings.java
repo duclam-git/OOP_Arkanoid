@@ -1,11 +1,10 @@
-// Thay thế toàn bộ nội dung của GameSettings.java bằng:
 package org.example.arkanoid_oop.model.util;
 
 import java.io.Serializable;
 
 public class GameSettings implements Serializable {
 
-    // NEW: Enum for Game Mode
+    // Enum for Game Mode
     public enum GameMode {
         EASY(3, "Easy"), // 3 Mạng
         NORMAL(2, "Normal"), // 2 Mạng

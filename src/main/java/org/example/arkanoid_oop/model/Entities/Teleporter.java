@@ -78,7 +78,7 @@ public class Teleporter extends ImageView {
         // Đặt cao hơn để đảm bảo thoát khỏi vùng va chạm và di chuyển lên
         ball.setLayoutY(exitY - ballRadius * 2);
 
-        // 2. Thay đổi hướng ngẫu nhiên (phân tán)
+        // 2. Thay đổi hướng ngẫu nhiên
         // Tạo một giá trị ngẫu nhiên từ -ballSpeed đến +ballSpeed cho hướng ngang (scatteredDx)
         double scatteredDx = (Math.random() * 2 * ballSpeed) - ballSpeed;
 

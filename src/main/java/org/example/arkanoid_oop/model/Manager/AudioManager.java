@@ -11,7 +11,6 @@ import java.util.*;
 
 /**
  * AudioManager - quản lý toàn bộ âm thanh trong game
- * -------------------------------------------------
  * 1. Âm thanh ngắn (SFX) dùng AudioClip pool → phát trùng nhau, mượt
  * 2. Nhạc nền (menu / game) dùng MediaPlayer → loop liên tục
  */
@@ -99,9 +98,7 @@ public class AudioManager {
         clip.play();
     }
 
-    // ============================
-    // NHẠC NỀN MENU
-    // ============================
+    // Nhạc nền MENU
     public void playMenuMusic() {
         stopMenuMusic(); // dừng nhạc cũ nếu có
         Media media = new Media(getClass().getResource("/sounds/menu_music.wav").toExternalForm());
@@ -152,10 +149,7 @@ public class AudioManager {
         return settings.isSoundEnabled();
     }
 
-    // ============================
     // LOGIC LOAD/SAVE SETTINGS
-    // ============================
-
     /**
      * Tải settings từ file. Nếu thất bại, dùng settings mặc định.
      */
@@ -187,7 +181,7 @@ public class AudioManager {
     }
 
     /**
-     * (CẬP NHẬT) Lưu settings hiện tại ra file ở luồng nền.
+     * Lưu settings hiện tại ra file ở luồng nền.
      */
     public void saveSettings() {
         // Sao chép settings hiện tại để luồng nền làm việc
@@ -214,7 +208,7 @@ public class AudioManager {
             }
         };
 
-        // (Tùy chọn) Xử lý nếu luồng nền gặp lỗi
+        // Xử lý nếu luồng nền gặp lỗi
         saveTask.setOnFailed(e -> {
             System.err.println("Task lưu settings thất bại!");
             saveTask.getException().printStackTrace();

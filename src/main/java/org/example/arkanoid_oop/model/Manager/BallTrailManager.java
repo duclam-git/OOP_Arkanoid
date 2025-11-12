@@ -72,7 +72,7 @@ public class BallTrailManager {
      * Hàm này phải được gọi MỖI KHUNG HÌNH trong game loop.
      */
     public void update() {
-        if (trailParts.isEmpty()) return; // Không có gì để làm
+        if (trailParts.isEmpty()) return;
 
         Iterator<ImageView> it = trailParts.iterator();
         while (it.hasNext()) {
@@ -85,7 +85,7 @@ public class BallTrailManager {
                 gamePane.getChildren().remove(trailPart);
                 it.remove();
             } else {
-                // Nếu còn -> cập nhật độ mờ và làm nó nhỏ lại
+                // Nếu còn thì cập nhật độ mờ và làm nó nhỏ lại
                 trailPart.setOpacity(newOpacity);
                 trailPart.setScaleX(trailPart.getScaleX() * 0.98); // Nhỏ dần
                 trailPart.setScaleY(trailPart.getScaleY() * 0.98);

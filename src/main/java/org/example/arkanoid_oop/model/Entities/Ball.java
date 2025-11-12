@@ -15,9 +15,6 @@ public class Ball extends ImageView {
 
     public static final double BALL_RADIUS = 10; // Kích thước bán kính hiển thị
 
-    // XÓA HẰNG SỐ TỐC ĐỘ TĨNH
-    // public static final double BALL_SPEED = 2.5;
-
     // Tốc độ và hướng di chuyển
     private double dx;
     private double dy;
@@ -27,9 +24,8 @@ public class Ball extends ImageView {
     private double screenWidth, screenHeight;
     private double startX, startY; // Vị trí ban đầu
 
-    // SỬA HÀM KHỞI TẠO (THÊM THAM SỐ 'gameMode')
+    // Hàm khởi tạo thứ nhất
     public Ball(double screenWidth, double screenHeight, double startX, double startY, String skinPath, GameMode gameMode) {
-        // 1. Tải ảnh quả bóng (hoặc thiên thạch)
         super(new Image(Ball.class.getResourceAsStream(skinPath)));
 
         this.screenWidth = screenWidth;
@@ -38,7 +34,7 @@ public class Ball extends ImageView {
         this.startY = startY;
         this.gameMode = gameMode; // LƯU GAMEMODE
 
-        // (MỚI) Đặt tốc độ dựa trên độ khó
+        // Đặt tốc độ dựa trên độ khó
         this.ballSpeed = getBaseBallSpeed(this.gameMode);
 
         // Đặt kích thước
@@ -58,9 +54,8 @@ public class Ball extends ImageView {
         rt.play();
     }
 
-    // SỬA HÀM KHỞI TẠO THỨ HAI (THÊM THAM SỐ 'gameMode')
+    // Hàm khởi tạo thứ 2
     public Ball(double currentX, double currentY, double screenWidth, double screenHeight, double dx, double dy, String skinPath, GameMode gameMode) {
-        // SỬA LẠI LỆNH GỌI 'this'
         this(screenWidth, screenHeight, currentX, currentY, skinPath, gameMode); // Gọi constructor chính
 
         // Ghi đè lại vị trí và hướng
@@ -96,8 +91,8 @@ public class Ball extends ImageView {
         setLayoutY(startY - BALL_RADIUS);
 
         // Tốc độ ngẫu nhiên ban đầu
-        dx = Math.random() > 0.5 ? this.ballSpeed : -this.ballSpeed; // Sửa: Dùng 'this.ballSpeed'
-        dy = -this.ballSpeed; // Sửa: Dùng 'this.ballSpeed'
+        dx = Math.random() > 0.5 ? this.ballSpeed : -this.ballSpeed;
+        dy = -this.ballSpeed;
     }
 
     /**
@@ -127,16 +122,15 @@ public class Ball extends ImageView {
             reverseDy();
         }
 
-        // (SỬA) Giới hạn tốc độ để không bị lỗi nảy do quá nhanh
+        // Giới hạn tốc độ để không bị lỗi nảy do quá nhanh
         if (Math.abs(dx) > this.ballSpeed * 1.5) {
             dx = (dx > 0) ? this.ballSpeed * 1.5 : -this.ballSpeed * 1.5;
         }
     }
 
-    // (MỚI) Thiết lập hướng mới sau va chạm ván trượt
+    // Thiết lập hướng mới sau va chạm ván trượt
     public void setDirection(double newDx, double newDy) {
         // Đảm bảo tốc độ không đổi, chỉ hướng thay đổi
-        // SỬA: Dùng 'this.ballSpeed' làm tốc độ cơ sở
         double currentSpeed = this.ballSpeed;
 
         // Chuẩn hóa hướng mới
