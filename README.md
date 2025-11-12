@@ -96,7 +96,7 @@ The game uses multiple threads to ensure smooth performance:
 | Icon | Name | Effect |
 |------|------|--------|
 | ![doublePaddle](src/main/resources/images/doublePaddle.png) | Double Paddle | Increases paddle width for 10 seconds |
-| ![Powerup_laser](src/main/resources/images/Powerup_laser.png) | Laser Paddle | Decreases paddle width for 10 seconds |
+| ![Powerup_laser](src/main/resources/images/powerup_laser.png) | Laser Paddle | Decreases paddle width for 10 seconds |
 | ![powerup_multiball](src/main/resources/images/powerup_multiball.png) | Multi Ball | Increases ball count by 2 |
 | ![shield](src/main/resources/images/Shield.png) | Forcefield | Prevent you from losing a bal one time |
 
