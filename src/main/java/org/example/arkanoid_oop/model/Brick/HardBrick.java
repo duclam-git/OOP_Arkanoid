@@ -3,7 +3,7 @@ package org.example.arkanoid_oop.model.Brick;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class Hard_brick extends Brick {
+public class HardBrick extends Brick {
 
     private int hitsLeft = 2; // Cần 2 lần chạm
 
@@ -11,7 +11,7 @@ public class Hard_brick extends Brick {
     private Image fullImage;
     private Image crackedImage;
 
-    public Hard_brick(double x, double y) {
+    public HardBrick(double x, double y) {
         super(x, y);
 
         // Tải 2 ảnh

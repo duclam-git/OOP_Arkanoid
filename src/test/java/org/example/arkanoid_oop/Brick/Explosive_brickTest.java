@@ -1,6 +1,6 @@
 package org.example.arkanoid_oop.Brick;
 
-import org.example.arkanoid_oop.model.Brick.Explosive_brick;
+import org.example.arkanoid_oop.model.Brick.ExplosiveBrick;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,11 +18,11 @@ public class Explosive_brickTest {
         }
     }
 
-    private Explosive_brick explosiveBrick;
+    private ExplosiveBrick explosiveBrick;
 
     @BeforeEach
     void setUp() {
-        explosiveBrick = new Explosive_brick(100, 100);
+        explosiveBrick = new ExplosiveBrick(100, 100);
     }
 
     @Test

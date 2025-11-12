@@ -1,6 +1,6 @@
 package org.example.arkanoid_oop.Brick;
 
-import org.example.arkanoid_oop.model.Brick.Impervious_brick;
+import org.example.arkanoid_oop.model.Brick.ImperviousBrick;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,11 +18,11 @@ public class Impervious_brickTest {
         }
     }
 
-    private Impervious_brick imperviousBrick;
+    private ImperviousBrick imperviousBrick;
 
     @BeforeEach
     void setUp() {
-        imperviousBrick = new Impervious_brick(100, 100);
+        imperviousBrick = new ImperviousBrick(100, 100);
     }
 
     @Test

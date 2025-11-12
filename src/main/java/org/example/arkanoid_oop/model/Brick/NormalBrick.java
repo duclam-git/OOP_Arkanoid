@@ -3,9 +3,9 @@ package org.example.arkanoid_oop.model.Brick;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class Normal_brick extends Brick {
+public class NormalBrick extends Brick {
 
-    public Normal_brick(double x, double y) {
+    public NormalBrick(double x, double y) {
         super(x, y);
 
         Image img = new Image(getClass().getResourceAsStream("/images/normal_brick.png"));

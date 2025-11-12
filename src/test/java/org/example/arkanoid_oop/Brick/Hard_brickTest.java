@@ -1,22 +1,22 @@
 package org.example.arkanoid_oop.Brick;
 
-import org.example.arkanoid_oop.model.Brick.Hard_brick;
+import org.example.arkanoid_oop.model.Brick.HardBrick;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 // *LƯU Ý QUAN TRỌNG VỀ JAVA-FX*:
-// Các lớp khởi tạo JavaFX components (như Hard_brick) cần JavaFX Runtime.
+// Các lớp khởi tạo JavaFX components (như HardBrick) cần JavaFX Runtime.
 // Để test này chạy, bạn có thể cần thêm dependency TestFX (hoặc tương đương)
 // HOẶC gọi javafx.application.Platform.startup(() -> {});
 // Trong ví dụ này, chúng ta chỉ tập trung vào logic onHit()
 
 public class Hard_brickTest {
 
-    private Hard_brick hardBrick;
+    private HardBrick hardBrick;
 
-    // Chuẩn bị môi trường JavaFX (cần thiết vì Hard_brick sử dụng Image/ImageView)
+    // Chuẩn bị môi trường JavaFX (cần thiết vì HardBrick sử dụng Image/ImageView)
     // Đây là cách đơn giản nhất để khởi tạo JavaFX Platform cho testing.
     @BeforeAll
     static void initJfxRuntime() {
@@ -30,7 +30,7 @@ public class Hard_brickTest {
     @BeforeEach
     void setUp() {
         // Khởi tạo một viên gạch mới trước mỗi test
-        hardBrick = new Hard_brick(100, 100);
+        hardBrick = new HardBrick(100, 100);
     }
 
     @Test

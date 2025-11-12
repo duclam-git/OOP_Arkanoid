@@ -6,12 +6,12 @@ import org.example.arkanoid_oop.model.util.PowerupType;
 
 import java.util.Random;
 
-public class Powerup_brick extends Brick {
+public class PowerupBrick extends Brick {
 
     private PowerupType powerupType;
     private static final Random rand = new Random(); // Biến ngẫu nhiên
 
-    public Powerup_brick(double x, double y) {
+    public PowerupBrick(double x, double y) {
         super(x, y);
 
         Image img = new Image(getClass().getResourceAsStream("/images/powerup_brick.png"));

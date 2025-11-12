@@ -3,9 +3,9 @@ package org.example.arkanoid_oop.model.Brick;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class Explosive_brick extends Brick {
+public class ExplosiveBrick extends Brick {
 
-    public Explosive_brick(double x, double y) {
+    public ExplosiveBrick(double x, double y) {
         super(x, y);
 
         Image img = new Image(getClass().getResourceAsStream("/images/explosive_brick.png"));

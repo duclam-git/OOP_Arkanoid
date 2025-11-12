@@ -18,8 +18,8 @@ import javafx.stage.Stage;
 
 // Model: Brick
 import org.example.arkanoid_oop.model.Brick.Brick;
-import org.example.arkanoid_oop.model.Brick.*; // Bao gồm cả Explosive_brick, Hard_brick, Powerup_brick
-import org.example.arkanoid_oop.model.Brick.Impervious_brick;
+import org.example.arkanoid_oop.model.Brick.*; // Bao gồm cả ExplosiveBrick, HardBrick, PowerupBrick
+import org.example.arkanoid_oop.model.Brick.ImperviousBrick;
 
 // Model: Entity
 import org.example.arkanoid_oop.model.Entities.*;
@@ -41,13 +41,11 @@ import org.example.arkanoid_oop.view.Menu.MainMenu;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.Collections;
 
 // Cập nhật static import cho các hằng số BRICK_WIDTH/HEIGHT
 import static org.example.arkanoid_oop.model.Brick.Brick.BRICK_HEIGHT;
@@ -222,24 +220,24 @@ public class GamePane extends Pane {
 
                 if (gameMode == GameMode.EASY) {
                     // Dễ: Nhiều gạch nổ (15%), nhiều powerup, nhiều gạch thường
-                    if (chance < 0.15) brick = new Explosive_brick(x, y);
-                    else if (chance < 0.40) brick = new Powerup_brick(x, y); // 25%
-                    else if (chance < 0.55) brick = new Hard_brick(x, y);    // 15%
-                    else brick = new Normal_brick(x, y);                     // 45% (Giảm từ 50%)
+                    if (chance < 0.15) brick = new ExplosiveBrick(x, y);
+                    else if (chance < 0.40) brick = new PowerupBrick(x, y); // 25%
+                    else if (chance < 0.55) brick = new HardBrick(x, y);    // 15%
+                    else brick = new NormalBrick(x, y);                     // 45% (Giảm từ 50%)
 
                 } else if (gameMode == GameMode.NORMAL) {
                     // Vừa: Tỉ lệ chuẩn, không gạch bất tử
-                    if (chance < 0.10) brick = new Explosive_brick(x, y);    // 10% (Giữ nguyên)
-                    else if (chance < 0.25) brick = new Powerup_brick(x, y); // 15%
-                    else if (chance < 0.45) brick = new Hard_brick(x, y);    // 20%
-                    else brick = new Normal_brick(x, y);                     // 55% (Gốc 45% + 10% cũ)
+                    if (chance < 0.10) brick = new ExplosiveBrick(x, y);    // 10% (Giữ nguyên)
+                    else if (chance < 0.25) brick = new PowerupBrick(x, y); // 15%
+                    else if (chance < 0.45) brick = new HardBrick(x, y);    // 20%
+                    else brick = new NormalBrick(x, y);                     // 55% (Gốc 45% + 10% cũ)
 
                 } else {
                     // Khó: Gạch bất tử bao quanh, 2 lỗ ở giữa, bên trong toàn gạch khó.
 
                     // 1. Xây tường bao (Hàng trên cùng, Cột trái, Cột phải)
                     if (r == 0 || c == 0 || c == 9) {
-                        brick = new Impervious_brick(x, y);
+                        brick = new ImperviousBrick(x, y);
                     }
                     // 2. Xây tường đáy và tạo 2 lỗ
                     else if (r == 6) { // Hàng dưới cùng
@@ -247,7 +245,7 @@ public class GamePane extends Pane {
                             // Đây là 2 lỗ ở giữa, không tạo gạch
                             continue;
                         } else {
-                            brick = new Impervious_brick(x, y); // Phần còn lại của tường đáy
+                            brick = new ImperviousBrick(x, y); // Phần còn lại của tường đáy
                         }
                     }
                     // 3. Xây gạch bên trong (Rows 1-5, Cols 1-8)
@@ -259,10 +257,10 @@ public class GamePane extends Pane {
                         // Hard:      51.25%
                         // Normal:    31.25%
 
-                        if (chance < 0.05) brick = new Explosive_brick(x, y);    // 5%
-                        else if (chance < 0.175) brick = new Powerup_brick(x, y); // 12.5% (0.05 + 0.125)
-                        else if (chance < 0.6875) brick = new Hard_brick(x, y);    // 51.25% (0.175 + 0.5125)
-                        else brick = new Normal_brick(x, y);                       // 31.25%
+                        if (chance < 0.05) brick = new ExplosiveBrick(x, y);    // 5%
+                        else if (chance < 0.175) brick = new PowerupBrick(x, y); // 12.5% (0.05 + 0.125)
+                        else if (chance < 0.6875) brick = new HardBrick(x, y);    // 51.25% (0.175 + 0.5125)
+                        else brick = new NormalBrick(x, y);                       // 31.25%
                     }
                 }
 
@@ -837,11 +835,11 @@ public class GamePane extends Pane {
                         brickIt.remove();
                         getChildren().remove(brickView);
                         score += brick.getScoreValue();
-                        if (brick instanceof Explosive_brick) {
-                            explode((Explosive_brick) brick);
+                        if (brick instanceof ExplosiveBrick) {
+                            explode((ExplosiveBrick) brick);
                         }
-                        if (brick instanceof Powerup_brick) {
-                            spawnPowerup((Powerup_brick) brick);
+                        if (brick instanceof PowerupBrick) {
+                            spawnPowerup((PowerupBrick) brick);
                             audio.play("powerup_spawn");
                         }
                     } else {
@@ -863,11 +861,11 @@ public class GamePane extends Pane {
                 bricks.remove(brick);
                 getChildren().remove(brick.getView());
                 score += brick.getScoreValue();
-                if (brick instanceof Explosive_brick) {
-                    explode((Explosive_brick) brick);
+                if (brick instanceof ExplosiveBrick) {
+                    explode((ExplosiveBrick) brick);
                 }
-                if (brick instanceof Powerup_brick) {
-                    spawnPowerup((Powerup_brick) brick);
+                if (brick instanceof PowerupBrick) {
+                    spawnPowerup((PowerupBrick) brick);
                 }
             }
             scoreText.setText("Score: " + score);
@@ -875,8 +873,8 @@ public class GamePane extends Pane {
         // Kiểm tra xem còn gạch KHÔNG BẤT TỬ nào còn lại không
         boolean hasDestroyableBricksLeft = false;
         for (Brick brick : bricks) {
-            // Nếu tìm thấy bất kỳ viên gạch nào KHÔNG phải là Impervious_brick
-            if (!(brick instanceof Impervious_brick)) {
+            // Nếu tìm thấy bất kỳ viên gạch nào KHÔNG phải là ImperviousBrick
+            if (!(brick instanceof ImperviousBrick)) {
                 hasDestroyableBricksLeft = true;
                 break;
             }
@@ -889,7 +887,7 @@ public class GamePane extends Pane {
         }
     }
 
-    private void spawnPowerup(Powerup_brick brick) {
+    private void spawnPowerup(PowerupBrick brick) {
         double chance = rand.nextDouble();
 
         // Tỉ lệ rơi vật phẩm dựa trên độ khó
@@ -961,7 +959,7 @@ public class GamePane extends Pane {
     }
 
 
-    private void explode(Explosive_brick sourceExplosiveBrick) {
+    private void explode(ExplosiveBrick sourceExplosiveBrick) {
         int explosionRadius = 3;
         Rectangle explosionArea = new Rectangle((int)sourceExplosiveBrick.getX() - BRICK_WIDTH * (explosionRadius / 2),
                 (int)sourceExplosiveBrick.getY() - BRICK_HEIGHT  * (explosionRadius / 2),
@@ -975,12 +973,12 @@ public class GamePane extends Pane {
         }
         for (Brick brick : bricksToRemove) {
 
-            if (brick instanceof Impervious_brick) {
+            if (brick instanceof ImperviousBrick) {
                 continue;
             }
 
             if (bricks.contains(brick)) {
-                if (brick instanceof Hard_brick) {
+                if (brick instanceof HardBrick) {
                     boolean wasDestroyed = brick.onHit();
                     if (wasDestroyed) {
                         bricks.remove(brick);
@@ -991,11 +989,11 @@ public class GamePane extends Pane {
                     bricks.remove(brick);
                     getChildren().remove(brick.getView());
                     score += brick.getScoreValue();
-                    if (brick instanceof Powerup_brick) {
-                        spawnPowerup((Powerup_brick) brick);
+                    if (brick instanceof PowerupBrick) {
+                        spawnPowerup((PowerupBrick) brick);
                     }
-                    if (brick instanceof Explosive_brick) {
-                        explode((Explosive_brick) brick);
+                    if (brick instanceof ExplosiveBrick) {
+                        explode((ExplosiveBrick) brick);
                     }
                 }
             }

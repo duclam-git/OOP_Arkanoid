@@ -8,14 +8,14 @@ import javafx.scene.image.ImageView;
  * Kế thừa từ Brick và ghi đè onHit() để không bao giờ bị phá hủy.
  * PHIÊN BẢN NÀY GIẢ ĐỊNH /images/impervious_brick.png LUÔN TỒN TẠI.
  */
-public class Impervious_brick extends Brick {
+public class ImperviousBrick extends Brick {
 
     // Tải ảnh gạch (tĩnh để tiết kiệm bộ nhớ)
     private static final Image imperviousImage = new Image(
-            Impervious_brick.class.getResourceAsStream("/images/impervious_brick.png")
+            ImperviousBrick.class.getResourceAsStream("/images/impervious_brick.png")
     );
 
-    public Impervious_brick(double x, double y) {
+    public ImperviousBrick(double x, double y) {
         super(x, y); // Gọi hàm khởi tạo của lớp cha
 
         // Sử dụng ảnh đã được tải
